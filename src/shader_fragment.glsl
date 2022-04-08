@@ -34,6 +34,8 @@ uniform sampler2D TextureImage0;
 uniform sampler2D TextureImage1;
 uniform sampler2D TextureImage2;
 uniform sampler2D TextureImage3;
+uniform sampler2D TextureImage4;
+uniform sampler2D TextureImage5;
 
 // O valor de saída ("out") de um Fragment Shader é a cor final do fragmento.
 out vec4 color;
@@ -87,31 +89,7 @@ void main()
  // Espectro da fonte de iluminação
     vec3 I = vec3(1.0,1.0,1.0); // PREENCH AQUI o espectro da fonte de luz
 
-    if ( object_id == SPHERE )
-    {
-        // PREENCHA AQUI as coordenadas de textura da esfera, computadas com
-        // projeção esférica EM COORDENADAS DO MODELO. Utilize como referência
-        // o slides 134-150 do documento Aula_20_Mapeamento_de_Texturas.pdf.
-        // A esfera que define a projeção deve estar centrada na posição
-        // "bbox_center" definida abaixo.
-
-        // Você deve utilizar:
-        //   função 'length( )' : comprimento Euclidiano de um vetor
-        //   função 'atan( , )' : arcotangente. Veja https://en.wikipedia.org/wiki/Atan2.
-        //   função 'asin( )'   : seno inverso.
-        //   constante M_PI
-        //   variável position_model
-        
-        vec4 bbox_center = (bbox_min + bbox_max) / 2.0;
-        float ro = length(position_model - bbox_center);
-        vec4 p_linha = bbox_center + ro * normalize(position_model - bbox_center);
-        float theta = atan(p_linha.x, p_linha.z);
-        float phi = asin(p_linha.y/ro);
-
-        U = (theta + M_PI) / (2*M_PI);
-        V = (phi + M_PI_2) / M_PI;
-    }
-    else if ( object_id == DRAGON )
+    if ( object_id == DRAGON )
     {
         // PREENCHA AQUI as coordenadas de textura do coelho, computadas com
         // projeção planar XY em COORDENADAS DO MODELO. Utilize como referência
@@ -133,7 +111,7 @@ void main()
 
         U = (position_model.x - minx) / (maxx- minx);
         V = (position_model.z - minz) / (maxz- minz);
-        Kd = texture(TextureImage2, vec2(U,V)).rgb;
+        Kd = texture(TextureImage0, vec2(U,V)).rgb;
         //kd = max(0,dot(n,l));
     }
     else if ( object_id == PLANE )
@@ -141,6 +119,7 @@ void main()
         // Coordenadas de textura do plano, obtidas do arquivo OBJ.
         U = texcoords.x;
         V = texcoords.y;
+        Kd = texture(TextureImage1, vec2(U,V)).rgb;
     }
 
     // Espectro da luz ambiente

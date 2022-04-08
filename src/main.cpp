@@ -19,6 +19,7 @@
 // Onde não especificado, código retirado do laboratório 5
 #include <cmath>
 #include <cstdio>
+#include <iostream>
 #include <cstdlib>
 
 // Headers abaixo são específicos de C++
@@ -207,11 +208,16 @@ float z = r*cos(g_CameraPhi)*cos(g_CameraTheta);
 float x = r*cos(g_CameraPhi)*sin(g_CameraTheta);
 
 //Posição do centro da câmera
-glm::vec4 camera_position_c  = glm::vec4(x,y,z,1.0f);
+glm::vec4 camera_position_c  = glm::vec4(0.0f,0.0f,6.0f,1.0f); // Ponto "c", centro da câmera
 glm::vec4 camera_lookat_l    = glm::vec4(0.0f,0.0f,0.0f,1.0f); // Ponto "l", para onde a câmera (look-at) estará sempre olhando
-glm::vec4 camera_view_vector = -camera_position_c; // Vetor "view", sentido para onde a câmera está virada
-glm::vec4 camera_up_vector   = glm::vec4(0.0f,1.0f,0.0f,0.0f); // Vetor "up" fixado para apontar para o "céu" (eito Y global)
-float speed = 0.1f;
+glm::vec4 camera_view_vector = glm::vec4(-x,0.0f,-z,0.0f); // Vetor "view", sentido para onde a câmera está virada
+glm::vec4 camera_up_vector   = glm::vec4(0.0f,1.0f,0.0f,0.0f); // Vetor "up" fixado para apontar para o "céu" (eixo Y global)up" fixado para apontar para o "céu" (eito Y global)
+float speed;
+float g_deltaTime = 0.0f;
+float g_lastFrame = 0.0f;
+
+
+
 
 int main(int argc, char* argv[])
 {
@@ -242,7 +248,7 @@ int main(int argc, char* argv[])
     // Criamos uma janela do sistema operacional, com 800 colunas e 600 linhas
     // de pixels, e com título "INF01047 ...".
     GLFWwindow* window;
-    window = glfwCreateWindow(800, 600, "INF01047 - 00315799 - Eduardo Eugênio Kussler", NULL, NULL);
+    window = glfwCreateWindow(800, 600, "INF01047 - Trabalho Final - Eduardo e Gabriel", NULL, NULL);
     if (!window)
     {
         glfwTerminate();
@@ -287,29 +293,21 @@ int main(int argc, char* argv[])
     LoadShadersFromFiles();
 
     // Carregamos duas imagens para serem utilizadas como textura
-    LoadTextureImage("../../data/tc-earth_daymap_surface.jpg");      // TextureImage0
-    LoadTextureImage("../../data/tc-earth_nightmap_citylights.gif"); // TextureImage1
     //Fonte - Trabalho final
     LoadTextureImage("../../data/dragon2.jpg");                       // TextureImage2
 
-    // Construímos a representação de objetos geométricos através de malhas de triângulos
-    ObjModel spheremodel("../../data/sphere.obj");
-    ComputeNormals(&spheremodel);
-    BuildTrianglesAndAddToVirtualScene(&spheremodel);
+    LoadTextureImage("../../data/floor.jpg");                       // TextureImage3
 
-    ObjModel bunnymodel("../../data/bunny.obj");
-    ComputeNormals(&bunnymodel);
-    BuildTrianglesAndAddToVirtualScene(&bunnymodel);
 
-    //ObjModel planemodel("../../data/plane.obj");
-    //ComputeNormals(&planemodel);
-    //BuildTrianglesAndAddToVirtualScene(&planemodel);
+    ObjModel planemodel("../../data/plane.obj");
+    ComputeNormals(&planemodel);
+    BuildTrianglesAndAddToVirtualScene(&planemodel);
 
 
     //Fonte - Trabalho final
-    ObjModel arena("../../data/arena.obj");
-    ComputeNormals(&arena);
-    BuildTrianglesAndAddToVirtualScene(&arena);
+    //ObjModel arena("../../data/plane.obj");
+    //ComputeNormals(&arena);
+    //BuildTrianglesAndAddToVirtualScene(&arena);
 
     ObjModel dragon("../../data/dragon.obj");
     ComputeNormals(&dragon);
@@ -318,6 +316,7 @@ int main(int argc, char* argv[])
     ObjModel staff("../../data/staff.obj");
     ComputeNormals(&staff);
     BuildTrianglesAndAddToVirtualScene(&staff);
+
 
     if ( argc > 1 )
     {
@@ -372,6 +371,14 @@ int main(int argc, char* argv[])
         z = r*cos(g_CameraPhi)*cos(g_CameraTheta);
         x = r*cos(g_CameraPhi)*sin(g_CameraTheta);
 
+
+        // https://learnopengl.com/Getting-started/Camera
+        const float currentFrame = glfwGetTime();
+        g_deltaTime = currentFrame - g_lastFrame;
+        g_lastFrame = currentFrame;
+
+        speed = 10.0f * g_deltaTime;
+
         // Abaixo definimos as varáveis que efetivamente definem a câmera virtual.
         // Veja slides 195-227 e 229-234 do documento Aula_08_Sistemas_de_Coordenadas.pdf.
         //FONTE, comentamos linha abaixo para que a posição c não seja sobrescrita
@@ -379,8 +386,13 @@ int main(int argc, char* argv[])
         //camera_position_c  = glm::vec4(x,y,z,1.0f); // Ponto "c", centro da câmera
         camera_lookat_l    = glm::vec4(0.0f,0.0f,0.0f,1.0f); // Ponto "l", para onde a câmera (look-at) estará sempre olhando
         // FONTE, laboratório 2
-        camera_view_vector = glm::vec4(-x,-y,-z, 0.0f); // Vetor "view", sentido para onde a câmera está virada
+        // if camera look_at
+        //glm::vec4 camera_lookat_position = glm::vec4(x,y,z,1.0f);
+        //camera_view_vector = camera_lookat_l - camera_lookat_position;//glm::vec4(x,-y,z, 0.0f); // Vetor "view", sentido para onde a câmera está virada
         camera_up_vector   = glm::vec4(0.0f,1.0f,0.0f,0.0f); // Vetor "up" fixado para apontar para o "céu" (eito Y global)
+        //Termina camera look at
+
+        camera_view_vector = glm::vec4(x,-y,z,0.0f);
 
         // Computamos a matriz "View" utilizando os parâmetros da câmera para
         // definir o sistema de coordenadas da câmera.  Veja slides 2-14, 184-190 e 236-242 do documento Aula_08_Sistemas_de_Coordenadas.pdf.
@@ -391,7 +403,7 @@ int main(int argc, char* argv[])
 
         // Note que, no sistema de coordenadas da câmera, os planos near e far
         // estão no sentido negativo! Veja slides 176-204 do documento Aula_09_Projecoes.pdf.
-        float nearplane = -0.05f;  // Posição do "near plane"
+        float nearplane = -0.1f;  // Posição do "near plane"
         float farplane  = -100.0f; // Posição do "far plane"
 
         if (g_UsePerspectiveProjection)
@@ -423,14 +435,10 @@ int main(int argc, char* argv[])
         glUniformMatrix4fv(view_uniform       , 1 , GL_FALSE , glm::value_ptr(view));
         glUniformMatrix4fv(projection_uniform , 1 , GL_FALSE , glm::value_ptr(projection));
 
-        #define SPHERE 0
-        #define BUNNY  1
         #define PLANE  2
-        #define BOW 3
         #define ARENA 4
         #define DRAGON 5
         #define STAFF 6
-
 
         // Desenhamos o plano do chão
         //model = Matrix_Translate(0.0f,-1.1f,0.0f)*Matrix_Scale(5,1,3);
@@ -438,30 +446,33 @@ int main(int argc, char* argv[])
         //glUniform1i(object_id_uniform, PLANE);
         //DrawVirtualObject("plane");
 
-
         //FONTE - Trabalho final
-        model = Matrix_Translate(0.0f,-1.1f,0.0f)*Matrix_Scale(8,1,6);
+        model = Matrix_Translate(0.0f,-.5f,0.0f)*Matrix_Scale(8,1,6);
         glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
-        glUniform1i(object_id_uniform, ARENA);
-        DrawVirtualObject("arena");
+        glUniform1i(object_id_uniform, PLANE);
+        DrawVirtualObject("plane");
 
         //model = Matrix_Translate(0.0f,-1.1f,0.0f)*Matrix_Scale(1,1,1);
         //glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
         //glUniform1i(object_id_uniform, ARENA);
         //DrawVirtualObject("centro");
 
-        model = Matrix_Translate(0.0f,-.1f,0.0f)*Matrix_Scale(0.05,0.05,0.05);
+        model = Matrix_Translate(0.0f,0.1f,0.0f)*Matrix_Scale(0.05,0.05,0.05);
         glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
         glUniform1i(object_id_uniform, DRAGON);
         DrawVirtualObject("dragon");
 
         model = Matrix_Identity();
-        model = Matrix_Translate(camera_position_c.x, camera_position_c.y, camera_position_c.z)
-        *Matrix_Rotate_Y(g_CameraTheta)
-        *Matrix_Rotate_X(g_CameraPhi);
-
+        model = model * Matrix_Translate(camera_position_c.x, camera_position_c.y, camera_position_c.z)
+                       * Matrix_Rotate_Y(g_CameraTheta)
+                        * Matrix_Rotate_X(g_CameraPhi);
         PushMatrix(model);
-            model = model * Matrix_Translate(0.5f,-4.5f,0.5f) *Matrix_Scale(1,1,1);
+            model = model* Matrix_Translate(-0.2,-0.2,0.1)
+                    * Matrix_Scale(.099f, .099f, .099f)
+                    * Matrix_Rotate_X(1.485)
+                    * Matrix_Rotate_Z(0.285f)
+                    * Matrix_Rotate_Y(3.14f*0.1)
+                    * Matrix_Translate(0,0,0);
             glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
             glUniform1i(object_id_uniform, STAFF);
             DrawVirtualObject("staff");
@@ -1269,11 +1280,13 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mod)
     // andar pra frente
     if(key == GLFW_KEY_W && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
         glm::vec4 w = camera_view_vector * (-1/norm(camera_view_vector));
+        w.y = 0;
         camera_position_c += w * -speed;
     }
 
     if(key == GLFW_KEY_S && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
         glm::vec4 w = -camera_view_vector * (1/norm(camera_view_vector));
+        w.y = 0;
         camera_position_c += w * speed;
     }
 
