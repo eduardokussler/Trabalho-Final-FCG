@@ -15,6 +15,7 @@
 //  vira
 //    #include <cstdio> // Em C++
 //
+// Gabriel Rodrigues Pedroso
 
 // Onde não especificado, código retirado do laboratório 5
 #include <cmath>
