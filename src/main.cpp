@@ -468,11 +468,16 @@ int main(int argc, char* argv[])
                        * Matrix_Rotate_Y(g_CameraTheta)
                         * Matrix_Rotate_X(g_CameraPhi);
         PushMatrix(model);
-            model = model* Matrix_Translate(-0.2,-0.2,0.1)
-                    * Matrix_Scale(.099f, .099f, .099f)
+            /*model = model* Matrix_Translate(-0.2,-0.2,0.1)
+                    * Matrix_Scale(.08f, .08f, .08f)
                     * Matrix_Rotate_X(1.485)
                     * Matrix_Rotate_Z(0.285f)
                     * Matrix_Rotate_Y(3.14f*0.1)
+                    * Matrix_Translate(0,0,0);*/
+            model = model* Matrix_Translate(-0.2f,-0.2f,0.2)
+                    * Matrix_Scale(0.06f,0.06f,0.06f)
+                    * Matrix_Rotate_X(-0.3f)
+                    * Matrix_Rotate_Y(1.5f)
                     * Matrix_Translate(0,0,0);
             glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
             glUniform1i(object_id_uniform, STAFF);
