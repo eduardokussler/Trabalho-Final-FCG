@@ -160,6 +160,8 @@ float g_AngleX = 0.0f;
 float g_AngleY = 0.0f;
 float g_AngleZ = 0.0f;
 
+float tempo = 0.0f;
+
 // "g_LeftMouseButtonPressed = true" se o usuário está com o botão esquerdo do mouse
 // pressionado no momento atual. Veja função MouseButtonCallback().
 bool g_LeftMouseButtonPressed = false;
@@ -214,6 +216,8 @@ glm::vec4 camera_lookat_l    = glm::vec4(0.0f,0.0f,0.0f,1.0f); // Ponto "l", par
 glm::vec4 camera_view_vector = glm::vec4(-x,0.0f,-z,0.0f); // Vetor "view", sentido para onde a câmera está virada
 glm::vec4 camera_up_vector   = glm::vec4(0.0f,1.0f,0.0f,0.0f); // Vetor "up" fixado para apontar para o "céu" (eixo Y global)up" fixado para apontar para o "céu" (eito Y global)
 float speed;
+float speed_dragon;
+bool dragon_direction = false;
 float g_deltaTime = 0.0f;
 float g_lastFrame = 0.0f;
 
@@ -223,6 +227,9 @@ bool W_key = false;
 bool A_key = false;
 bool S_key = false;
 bool D_key = false;
+
+// Bezier
+glm::vec4 bezier(float pos, glm::vec4 pc1, glm::vec4 pc2, glm::vec4 pc3, glm::vec4 pc4);
 
 
 
@@ -389,7 +396,9 @@ int main(int argc, char* argv[])
         g_deltaTime = currentFrame - g_lastFrame;
         g_lastFrame = currentFrame;
 
-        speed = 5.0f * g_deltaTime;
+        speed = 2.5f * g_deltaTime; //velocidade do player
+        speed_dragon = speed;
+
 
         // Fonte: Laboratório 2
         // Retirado dos slides Aula 08 - Sistemas de Coordenadas paginas 195-227
@@ -474,6 +483,7 @@ int main(int argc, char* argv[])
         #define PLANE  1
         #define STAFF  2
         #define FIREBALL 3
+        #define FLOOR 4
 
         // Desenhamos o plano do chão
         //model = Matrix_Translate(0.0f,-1.1f,0.0f)*Matrix_Scale(5,1,3);
@@ -486,13 +496,15 @@ int main(int argc, char* argv[])
         float arena_Z = 6.0f;
 
         //FONTE - Trabalho final
+
+        // Chão
         model = Matrix_Translate(0.0f,-0.5f,0.0f)*Matrix_Scale(arena_X,arena_Y,arena_Z);
         glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
-        glUniform1i(object_id_uniform, PLANE);
+        glUniform1i(object_id_uniform, FLOOR);
         DrawVirtualObject("plane");
 
         // Parede 1 (atras do dragao)
-        model = Matrix_Translate(0.0f,0.0f,-arena_Z + 0.01)*Matrix_Scale(arena_X,0.5f,0.01f)
+        model = Matrix_Translate(0.0f,0.0f,-arena_Z + 0.01)*Matrix_Scale(arena_X,2.5f,0.01f)
                 * Matrix_Rotate_X(3.14f/2.0f);
         glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
         glUniform1i(object_id_uniform, PLANE);
@@ -501,7 +513,7 @@ int main(int argc, char* argv[])
         // Parede 2 (esquerda do dragao)
         model = Matrix_Rotate_Y(3.14f/2.0f)
                 * Matrix_Translate(0.0f,0.0f,-arena_X + 0.01)
-                * Matrix_Scale(arena_Z,0.5f,0.01f)
+                * Matrix_Scale(arena_Z,2.5f,0.01f)
                 * Matrix_Rotate_X(3.14f/2.0f);
         glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
         glUniform1i(object_id_uniform, PLANE);
@@ -509,24 +521,41 @@ int main(int argc, char* argv[])
 
         // Parede 3 (direita do dragao)
         model = Matrix_Rotate_Y(3.14f/2.0f)
-                * Matrix_Translate(0.0f,0.0f,arena_X - 0.01)*Matrix_Scale(arena_Z,0.5f,0.01f)
+                * Matrix_Translate(0.0f,0.0f,arena_X - 0.01)*Matrix_Scale(arena_Z,2.5f,0.01f)
                 * Matrix_Rotate_X((3.0f*3.14f)/2.0f);
         glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
         glUniform1i(object_id_uniform, PLANE);
         DrawVirtualObject("plane");
 
         // Parede 4 (na frente do dragao)
-        model = Matrix_Translate(0.0f,0.0f,arena_Z - 0.01)*Matrix_Scale(arena_X,0.5f,0.01f)
+        model = Matrix_Translate(0.0f,0.0f,arena_Z - 0.01)*Matrix_Scale(arena_X,2.5f,0.01f)
                 * Matrix_Rotate_X((3.0f*3.14f)/2.0f);
         glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
         glUniform1i(object_id_uniform, PLANE);
         DrawVirtualObject("plane");
 
+        glm::vec4 pos_inicial_dragao = glm::vec4(0.5f,3.5f,0.0f, 1.0f);
+        pos_inicial_dragao = pos_inicial_dragao/norm(pos_inicial_dragao);
+
+        if(tempo > 2)
+        {
+            dragon_direction = !dragon_direction;
+        }
+        else if (tempo <= -2)
+            dragon_direction = !dragon_direction;
+
+        if(dragon_direction)
+            tempo += speed_dragon/4;
+        else
+            tempo -= speed_dragon/4;
+
+        glm::vec4 p1 = glm::vec4(1.5f,1.5f,0.0f,0.1f);
+        glm::vec4 p2 = glm::vec4(0.0f,1.0f,0.5f,0.1f);
+        glm::vec4 p3 = glm::vec4(-1.5f,0.5f,1.0f,0.1f);
+        glm::vec4 pos_dragao = bezier(tempo,p1,p2,p3,p1);
 
 
-
-
-        model = Matrix_Translate(0.0f,0.5f,0.0f)*Matrix_Scale(0.05,0.05,0.05);
+        model = Matrix_Translate(pos_dragao.x, pos_dragao.y, pos_dragao.z)*Matrix_Scale(0.05,0.05,0.05);
         glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
         glUniform1i(object_id_uniform, DRAGON);
         DrawVirtualObject("dragon");
@@ -727,7 +756,22 @@ void LoadShadersFromFiles()
     glUniform1i(glGetUniformLocation(program_id, "TextureImage0"), 0);
     glUniform1i(glGetUniformLocation(program_id, "TextureImage1"), 1);
     glUniform1i(glGetUniformLocation(program_id, "TextureImage2"), 2);
+    glUniform1i(glGetUniformLocation(program_id, "TextureImage3"), 3);
     glUseProgram(0);
+}
+
+// FONTE: algoritmo adaptado de:
+// Aula 16 slide número 81
+// https://www.geeksforgeeks.org/cubic-bezier-curve-implementation-in-c/
+
+glm::vec4 bezier(float pos, glm::vec4 pc1, glm::vec4 pc2, glm::vec4 pc3, glm::vec4 pc4)
+{
+    glm::vec3 b0 = glm::vec3(pow(1-pos,3)*pc1[0],pow(1-pos,3)*pc1[1],pow(1-pos,3)*pc1[2]);
+    glm::vec3 b1 = glm::vec3(3*pos*pow(1-pos,2)*pc2[0],3*pos*pow(1-pos,2)*pc2[1],3*pos*pow(1-pos,2)*pc2[2]);
+    glm::vec3 b2 = glm::vec3(3*pos*pos*(1-pos)*pc3[0],3*pos*pos*(1-pos)*pc3[1],3*pos*pos*(1-pos)*pc3[2]);
+    glm::vec3 b3 = glm::vec3(pow(pos,3)*pc4[0],pow(pos,3)*pc4[1],pow(pos,3)*pc4[2]);
+
+    return  glm::vec4(b0[0] + b1[0] + b2[0] + b3[0],b0[1] + b1[1] + b2[1] + b3[1],b0[2] + b1[2] + b2[2] + b3[2], 1.0f);
 }
 
 // Função que pega a matriz M e guarda a mesma no topo da pilha

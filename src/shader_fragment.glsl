@@ -23,6 +23,7 @@ uniform mat4 projection;
 #define PLANE  1
 #define STAFF  2
 #define FIREBALL 3
+#define FLOOR 4
 uniform int object_id;
 
 // Parâmetros da axis-aligned bounding box (AABB) do modelo
@@ -116,7 +117,7 @@ void main()
         Kd = texture(TextureImage0, vec2(U,V)).rgb;
         //kd = max(0,dot(n,l));
     }
-    else if ( object_id == PLANE )
+    else if ( object_id == FLOOR )
     {
         // Coordenadas de textura do plano, obtidas do arquivo OBJ.
         U = texcoords.x;
@@ -125,6 +126,7 @@ void main()
         q = 70;
         Kd = texture(TextureImage1, vec2(U,V)).rgb;
         Kd = Kd / 2;
+
     }
     else if ( object_id == STAFF )
     {
@@ -160,24 +162,39 @@ void main()
         Kd = texture(TextureImage3, vec2(U,V)).rgb;
         color.rgb = Kd;
     }
+    else if ( object_id == PLANE )
+    {
+        // Coordenadas de textura do plano, obtidas do arquivo OBJ.
+        U = texcoords.x;
+        V = texcoords.y;
+
+        q = 70;
+        Kd = texture(TextureImage1, vec2(U,V)).rgb;
+        Kd = Kd / 2;
+
+        color.rgb = Kd;
+
+        calc_color = false;
+
+    }
 
     if(calc_color)
     {
-    // Espectro da luz ambiente
-    vec3 Ia = vec3(0.2,0.2,0.2); // PREENCHA AQUI o espectro da luz ambiente
+        // Espectro da luz ambiente
+        vec3 Ia = vec3(0.2,0.2,0.2); // PREENCHA AQUI o espectro da luz ambiente
 
-    vec3 lambert_diffuse_term = Kd * I * max(0, dot(n,l)); // PREENCHA AQUI o termo difuso de Lambert
+        vec3 lambert_diffuse_term = Kd * I * max(0, dot(n,l)); // PREENCHA AQUI o termo difuso de Lambert
 
 
-    // Termo ambiente
-    vec3 ambient_term = Ka*Ia; // o termo ambiente
+        // Termo ambiente
+        vec3 ambient_term = Ka*Ia; // o termo ambiente
 
-    // Termo especular utilizando o modelo de iluminação de Phong
-    vec3 phong_specular_term  = Ks*I*pow(max(0, dot(r,v)), q); //o termo especular de Phong
+        // Termo especular utilizando o modelo de iluminação de Phong
+        vec3 phong_specular_term  = Ks*I*pow(max(0, dot(r,v)), q); //o termo especular de Phong
 
-    color.a = 1;
+        color.a = 1;
 
-    color.rgb = lambert_diffuse_term + ambient_term + phong_specular_term;
+        color.rgb = lambert_diffuse_term + ambient_term + phong_specular_term;
     }
 
     // NOTE: Se você quiser fazer o rendering de objetos transparentes, é
