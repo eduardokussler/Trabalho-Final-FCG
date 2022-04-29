@@ -15,6 +15,7 @@
 //  vira
 //    #include <cstdio> // Em C++
 //
+// Eduardo Eugênio Kussler
 // Gabriel Rodrigues Pedroso
 
 // Onde não especificado, código retirado do laboratório 5
@@ -539,16 +540,23 @@ int main(int argc, char* argv[])
 
         if(tempo > 2)
         {
+            tempo = 0;
             dragon_direction = !dragon_direction;
         }
+
         else if (tempo <= -2)
+        {
             dragon_direction = !dragon_direction;
+            tempo = -4;
+        }
+
 
         if(dragon_direction)
             tempo += speed_dragon/4;
         else
             tempo -= speed_dragon/4;
 
+            //https://nylki.github.io/fit-bezier-3d-visualization/
         glm::vec4 p1 = glm::vec4(1.5f,1.5f,0.0f,0.1f);
         glm::vec4 p2 = glm::vec4(0.0f,1.0f,0.5f,0.1f);
         glm::vec4 p3 = glm::vec4(-1.5f,0.5f,1.0f,0.1f);
