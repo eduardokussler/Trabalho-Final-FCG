@@ -159,7 +159,7 @@ void main()
 
         // Ks = vec3(0.0,0.0,0.0); // Refletância especular
 
-        // calc_color = false;
+        calc_color = false;
 
         // Kd = texture(TextureImage3, vec2(U,V)).rgb;
         // color.rgb = Kd;
@@ -217,5 +217,5 @@ void main()
     // Cor final com correção gamma, considerando monitor sRGB.
     // Veja https://en.wikipedia.org/w/index.php?title=Gamma_correction&oldid=751281772#Windows.2C_Mac.2C_sRGB_and_TV.2Fvideo_standard_gammas
     color.rgb = pow(color.rgb, vec3(1.0,1.0,1.0)/2.2);
-} 
+}
 

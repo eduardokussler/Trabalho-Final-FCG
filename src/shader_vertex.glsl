@@ -78,9 +78,9 @@ void main()
         float lambert = max(0, dot(n, l));
         vec3 I = vec3(1.0,1.0,1.0); // PREENCH AQUI o espectro da fonte de luz
 
-        vec3 Kd = vec3(0.8,0.02,0.08); // Refletância difusa
+        vec3 Kd = vec3(0.8,0.1,0.08); // Refletância difusa
         vec3 Ka = Kd/4; // Refletância ambiente
-        vec3 Ia = vec3(0.2,0.2,0.2); // PREENCHA AQUI o espectro da luz ambiente
+        vec3 Ia = vec3(0.4,0.2,0.2); // PREENCHA AQUI o espectro da luz ambiente
 
         vec3 ambient_term = Ka*Ia; // o termo ambiente
         vec3 lambert_diffuse_term = Kd * I * lambert; // PREENCHA AQUI o termo difuso de Lambert

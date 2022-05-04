@@ -160,7 +160,7 @@ float g_AngleX = 0.0f;
 float g_AngleY = 0.0f;
 float g_AngleZ = 0.0f;
 
-float tempo = 0.0f;
+float caminho_percorrido = 0.0f;
 
 // "g_LeftMouseButtonPressed = true" se o usuário está com o botão esquerdo do mouse
 // pressionado no momento atual. Veja função MouseButtonCallback().
@@ -397,7 +397,7 @@ int main(int argc, char* argv[])
         g_lastFrame = currentFrame;
 
         speed = 2.5f * g_deltaTime; //velocidade do player
-        speed_dragon = speed;
+        speed_dragon = speed / 1.6;
 
 
         // Fonte: Laboratório 2
@@ -537,29 +537,29 @@ int main(int argc, char* argv[])
         glm::vec4 pos_inicial_dragao = glm::vec4(0.5f,3.5f,0.0f, 1.0f);
         pos_inicial_dragao = pos_inicial_dragao/norm(pos_inicial_dragao);
 
-        if(tempo > 2)
+        if(caminho_percorrido > 1.5)
         {
-            tempo = 2;
+            caminho_percorrido = 1.5;
             dragon_direction = !dragon_direction;
         }
 
-        else if (tempo <= -2)
+        else if (caminho_percorrido <= -1.5)
         {
             dragon_direction = !dragon_direction;
-            tempo = -2;
+            caminho_percorrido = -1.5;
         }
 
 
         if(dragon_direction)
-            tempo += speed_dragon/4;
+            caminho_percorrido += speed_dragon/4;
         else
-            tempo -= speed_dragon/4;
+            caminho_percorrido -= speed_dragon/4;
 
             //https://nylki.github.io/fit-bezier-3d-visualization/
-        glm::vec4 p1 = glm::vec4(1.5f,1.5f,0.0f,0.1f);
-        glm::vec4 p2 = glm::vec4(0.0f,1.0f,0.5f,0.1f);
-        glm::vec4 p3 = glm::vec4(-1.5f,0.5f,1.0f,0.1f);
-        glm::vec4 pos_dragao = bezier(tempo,p1,p2,p3,p1);
+        glm::vec4 p1 = glm::vec4(1.0,1.0,0.0,1.0f);
+        glm::vec4 p2 = glm::vec4(0.0,0.5,0.0, 1.0f);
+        glm::vec4 p3 = glm::vec4(-1.0,0.5,1.0,1.0f);
+        glm::vec4 pos_dragao = bezier(caminho_percorrido,p1,p2,p3,p1);
 
 
         model = Matrix_Translate(pos_dragao.x, pos_dragao.y, pos_dragao.z)*Matrix_Scale(0.05,0.05,0.05);
