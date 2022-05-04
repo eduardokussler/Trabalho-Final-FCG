@@ -19,10 +19,10 @@ uniform mat4 view;
 uniform mat4 projection;
 
 // Identificador que define qual objeto está sendo desenhado no momento
-#define SPHERE 0
-#define BUNNY  1
-#define PLANE  2
-#define DRAGON 5
+#define DRAGON 0
+#define PLANE  1
+#define STAFF  2
+#define FIREBALL 3
 uniform int object_id;
 
 // Parâmetros da axis-aligned bounding box (AABB) do modelo
@@ -34,8 +34,6 @@ uniform sampler2D TextureImage0;
 uniform sampler2D TextureImage1;
 uniform sampler2D TextureImage2;
 uniform sampler2D TextureImage3;
-uniform sampler2D TextureImage4;
-uniform sampler2D TextureImage5;
 
 // O valor de saída ("out") de um Fragment Shader é a cor final do fragmento.
 out vec4 color;
@@ -66,7 +64,7 @@ void main()
     vec4 v = normalize(camera_position - p);
 
     // Vetor que define o sentido da fonte de luz em relação ao ponto atual.
-    vec4 l = normalize(vec4(0.0,1.0,0.0,0.0));
+    vec4 l = normalize(vec4(1.0,1.0,0.0,0.0));
     //vec4 l = v;
     // Coordenadas de textura U e V
     float U = 0.0;
@@ -84,10 +82,14 @@ void main()
     vec3 Kd = vec3(0.08,0.08,0.08); // Refletância difusa
     vec3 Ks = vec3(0.08,0.08,0.08); // Refletância especular
     vec3 Ka = Kd/4; // Refletância ambiente
+
     float q = 1.0; // Expoente especular para o modelo de iluminação de Phong
- // Termo difuso utilizando a lei dos cossenos de Lambert
- // Espectro da fonte de iluminação
+
+    // Termo difuso utilizando a lei dos cossenos de Lambert
+    // Espectro da fonte de iluminação
     vec3 I = vec3(1.0,1.0,1.0); // PREENCH AQUI o espectro da fonte de luz
+
+    bool calc_color = true;
 
     if ( object_id == DRAGON )
     {
@@ -119,9 +121,48 @@ void main()
         // Coordenadas de textura do plano, obtidas do arquivo OBJ.
         U = texcoords.x;
         V = texcoords.y;
+
+        q = 70;
         Kd = texture(TextureImage1, vec2(U,V)).rgb;
+        Kd = Kd / 2;
+    }
+    else if ( object_id == STAFF )
+    {
+        float minx = bbox_min.x;
+        float maxx = bbox_max.x;
+
+        float miny = bbox_min.y;
+        float maxy = bbox_max.y;
+
+        float minz = bbox_min.z;
+        float maxz = bbox_max.z;
+
+        U = (position_model.x - minx) / (maxx- minx);
+        V = (position_model.z - minz) / (maxz- minz);
+        Kd = texture(TextureImage2, vec2(U,V)).rgb;
+
+    }
+    else if ( object_id == FIREBALL ) //Fonte: Laboratório 5
+    {
+        vec4 bbox_center = (bbox_min + bbox_max) / 2.0;
+        float ro = length(position_model - bbox_center);
+        vec4 p_linha = bbox_center + ro * normalize(position_model - bbox_center);
+        float theta = atan(p_linha.x, p_linha.z);
+        float phi = asin(p_linha.y/ro);
+
+        U = (theta + M_PI) / (2*M_PI);
+        V = (phi + M_PI_2) / M_PI;
+
+        Ks = vec3(0.0,0.0,0.0); // Refletância especular
+
+        calc_color = false;
+
+        Kd = texture(TextureImage3, vec2(U,V)).rgb;
+        color.rgb = Kd;
     }
 
+    if(calc_color)
+    {
     // Espectro da luz ambiente
     vec3 Ia = vec3(0.2,0.2,0.2); // PREENCHA AQUI o espectro da luz ambiente
 
@@ -137,6 +178,7 @@ void main()
     color.a = 1;
 
     color.rgb = lambert_diffuse_term + ambient_term + phong_specular_term;
+    }
 
     // NOTE: Se você quiser fazer o rendering de objetos transparentes, é
     // necessário:

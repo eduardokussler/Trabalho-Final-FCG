@@ -15,6 +15,7 @@
 //  vira
 //    #include <cstdio> // Em C++
 //
+// Gabriel Rodrigues Pedroso
 
 // Onde não especificado, código retirado do laboratório 5
 #include <cmath>
@@ -217,6 +218,12 @@ float g_deltaTime = 0.0f;
 float g_lastFrame = 0.0f;
 
 
+// Lab 2
+bool W_key = false;
+bool A_key = false;
+bool S_key = false;
+bool D_key = false;
+
 
 
 int main(int argc, char* argv[])
@@ -294,9 +301,10 @@ int main(int argc, char* argv[])
 
     // Carregamos duas imagens para serem utilizadas como textura
     //Fonte - Trabalho final
-    LoadTextureImage("../../data/dragon2.jpg");                       // TextureImage2
-
-    LoadTextureImage("../../data/floor.jpg");                       // TextureImage3
+    LoadTextureImage("../../data/dragon2.jpg");                     // TextureImage0
+    LoadTextureImage("../../data/floor.jpg");                       // TextureImage1
+    LoadTextureImage("../../data/staff.jpg");                       // TextureImage2
+    LoadTextureImage("../../data/fireball.png");                    // TextureImage3
 
 
     ObjModel planemodel("../../data/plane.obj");
@@ -305,9 +313,6 @@ int main(int argc, char* argv[])
 
 
     //Fonte - Trabalho final
-    //ObjModel arena("../../data/plane.obj");
-    //ComputeNormals(&arena);
-    //BuildTrianglesAndAddToVirtualScene(&arena);
 
     ObjModel dragon("../../data/dragon.obj");
     ComputeNormals(&dragon);
@@ -316,6 +321,10 @@ int main(int argc, char* argv[])
     ObjModel staff("../../data/staff.obj");
     ComputeNormals(&staff);
     BuildTrianglesAndAddToVirtualScene(&staff);
+
+    ObjModel fireballmodel("../../data/fireball.obj");
+    ComputeNormals(&fireballmodel);
+    BuildTrianglesAndAddToVirtualScene(&fireballmodel);
 
 
     if ( argc > 1 )
@@ -340,6 +349,9 @@ int main(int argc, char* argv[])
     glm::mat4 the_projection;
     glm::mat4 the_model;
     glm::mat4 the_view;
+
+    // Desativar o mouse
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     // Ficamos em loop, renderizando, até que o usuário feche a janela
     while (!glfwWindowShouldClose(window))
@@ -377,7 +389,30 @@ int main(int argc, char* argv[])
         g_deltaTime = currentFrame - g_lastFrame;
         g_lastFrame = currentFrame;
 
-        speed = 10.0f * g_deltaTime;
+        speed = 5.0f * g_deltaTime;
+
+        // Fonte: Laboratório 2
+        // Retirado dos slides Aula 08 - Sistemas de Coordenadas paginas 195-227
+
+		glm::vec4 w = -camera_view_vector; //vetor w
+		glm::vec4 u = crossproduct(camera_up_vector, w); //vetor u
+
+		w = w / norm(w);
+		u = u / norm(u);
+
+		w.y = 0;
+
+		if(W_key)
+			camera_position_c += -w * speed;
+
+		if(S_key)
+			camera_position_c += w * speed;
+
+		if(D_key)
+			camera_position_c += u * speed;
+
+		if(A_key)
+			camera_position_c += -u * speed;
 
         // Abaixo definimos as varáveis que efetivamente definem a câmera virtual.
         // Veja slides 195-227 e 229-234 do documento Aula_08_Sistemas_de_Coordenadas.pdf.
@@ -435,10 +470,10 @@ int main(int argc, char* argv[])
         glUniformMatrix4fv(view_uniform       , 1 , GL_FALSE , glm::value_ptr(view));
         glUniformMatrix4fv(projection_uniform , 1 , GL_FALSE , glm::value_ptr(projection));
 
-        #define PLANE  2
-        #define ARENA 4
-        #define DRAGON 5
-        #define STAFF 6
+        #define DRAGON 0
+        #define PLANE  1
+        #define STAFF  2
+        #define FIREBALL 3
 
         // Desenhamos o plano do chão
         //model = Matrix_Translate(0.0f,-1.1f,0.0f)*Matrix_Scale(5,1,3);
@@ -446,18 +481,52 @@ int main(int argc, char* argv[])
         //glUniform1i(object_id_uniform, PLANE);
         //DrawVirtualObject("plane");
 
+        float arena_X = 8.0f;
+        float arena_Y = 1.0f;
+        float arena_Z = 6.0f;
+
         //FONTE - Trabalho final
-        model = Matrix_Translate(0.0f,-.5f,0.0f)*Matrix_Scale(8,1,6);
+        model = Matrix_Translate(0.0f,-0.5f,0.0f)*Matrix_Scale(arena_X,arena_Y,arena_Z);
         glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
         glUniform1i(object_id_uniform, PLANE);
         DrawVirtualObject("plane");
 
-        //model = Matrix_Translate(0.0f,-1.1f,0.0f)*Matrix_Scale(1,1,1);
-        //glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
-        //glUniform1i(object_id_uniform, ARENA);
-        //DrawVirtualObject("centro");
+        // Parede 1 (atras do dragao)
+        model = Matrix_Translate(0.0f,0.0f,-arena_Z + 0.01)*Matrix_Scale(arena_X,0.5f,0.01f)
+                * Matrix_Rotate_X(3.14f/2.0f);
+        glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+        glUniform1i(object_id_uniform, PLANE);
+        DrawVirtualObject("plane");
 
-        model = Matrix_Translate(0.0f,0.1f,0.0f)*Matrix_Scale(0.05,0.05,0.05);
+        // Parede 2 (esquerda do dragao)
+        model = Matrix_Rotate_Y(3.14f/2.0f)
+                * Matrix_Translate(0.0f,0.0f,-arena_X + 0.01)
+                * Matrix_Scale(arena_Z,0.5f,0.01f)
+                * Matrix_Rotate_X(3.14f/2.0f);
+        glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+        glUniform1i(object_id_uniform, PLANE);
+        DrawVirtualObject("plane");
+
+        // Parede 3 (direita do dragao)
+        model = Matrix_Rotate_Y(3.14f/2.0f)
+                * Matrix_Translate(0.0f,0.0f,arena_X - 0.01)*Matrix_Scale(arena_Z,0.5f,0.01f)
+                * Matrix_Rotate_X((3.0f*3.14f)/2.0f);
+        glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+        glUniform1i(object_id_uniform, PLANE);
+        DrawVirtualObject("plane");
+
+        // Parede 4 (na frente do dragao)
+        model = Matrix_Translate(0.0f,0.0f,arena_Z - 0.01)*Matrix_Scale(arena_X,0.5f,0.01f)
+                * Matrix_Rotate_X((3.0f*3.14f)/2.0f);
+        glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+        glUniform1i(object_id_uniform, PLANE);
+        DrawVirtualObject("plane");
+
+
+
+
+
+        model = Matrix_Translate(0.0f,0.5f,0.0f)*Matrix_Scale(0.05,0.05,0.05);
         glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
         glUniform1i(object_id_uniform, DRAGON);
         DrawVirtualObject("dragon");
@@ -467,32 +536,30 @@ int main(int argc, char* argv[])
                        * Matrix_Rotate_Y(g_CameraTheta)
                         * Matrix_Rotate_X(g_CameraPhi);
         PushMatrix(model);
-            model = model* Matrix_Translate(-0.2,-0.2,0.1)
-                    * Matrix_Scale(.099f, .099f, .099f)
+            /*model = model* Matrix_Translate(-0.2,-0.2,0.1)
+                    * Matrix_Scale(.08f, .08f, .08f)
                     * Matrix_Rotate_X(1.485)
                     * Matrix_Rotate_Z(0.285f)
                     * Matrix_Rotate_Y(3.14f*0.1)
+                    * Matrix_Translate(0,0,0);*/
+            model = model* Matrix_Translate(-0.2f,-0.2f,0.2)
+                    * Matrix_Scale(0.06f,0.06f,0.06f)
+                    * Matrix_Rotate_X(-0.3f)
+                    * Matrix_Rotate_Y(1.5f)
                     * Matrix_Translate(0,0,0);
             glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
             glUniform1i(object_id_uniform, STAFF);
             DrawVirtualObject("staff");
         PopMatrix(model);
 
+        model = Matrix_Translate(0.0f,1.1f,0.0f)
+                *Matrix_Scale(0.05f, 0.05f, 0.05f);
+        glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+        glUniform1i(object_id_uniform, FIREBALL);
+        DrawVirtualObject("fireball");
 
-        //model = model* Matrix_Translate(0.05f,0.05f,0.05f)
-        //            * Matrix_Scale(.02f, .02f, .02f)
-        //            * Matrix_Rotate_X(3.14f/2.0f)
-        //            * Matrix_Rotate_Z(-3.14f/2.0f);
-        //    glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
-        //    glUniform1i(object_id_uniform, BOW);
-        //    DrawVirtualObject("bow");
 
-        // Pegamos um vértice com coordenadas de modelo (0.5, 0.5, 0.5, 1) e o
-        // passamos por todos os sistemas de coordenadas armazenados nas
-        // matrizes the_model, the_view, e the_projection; e escrevemos na tela
-        // as matrizes e pontos resultantes dessas transformações.
-        //glm::vec4 p_model(0.5f, 0.5f, 0.5f, 1.0f);
-        //TextRendering_ShowModelViewProjection(window, projection, view, model, p_model);
+
 
         // Imprimimos na tela os ângulos de Euler que controlam a rotação do
         // terceiro cubo.
@@ -1238,71 +1305,55 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mod)
         g_AngleZ += (mod & GLFW_MOD_SHIFT) ? -delta : delta;
     }
 
+    //Fonte: Laboratório 2
+
+	if (key == GLFW_KEY_W && action == GLFW_PRESS)
+    {
+        W_key = true;
+    }
+
+    if (key == GLFW_KEY_W && action == GLFW_RELEASE)
+    {
+        W_key = false;
+    }
+
+    if (key == GLFW_KEY_S && action == GLFW_PRESS)
+    {
+        S_key = true;
+    }
+
+    if (key == GLFW_KEY_S && action == GLFW_RELEASE)
+    {
+        S_key = false;
+    }
+
+    if (key == GLFW_KEY_A && action == GLFW_PRESS)
+    {
+        A_key = true;
+    }
+
+    if (key == GLFW_KEY_A && action == GLFW_RELEASE)
+    {
+        A_key = false;
+    }
+
+    if (key == GLFW_KEY_D && action == GLFW_PRESS)
+    {
+        D_key = true;
+    }
+
+    if (key == GLFW_KEY_D && action == GLFW_RELEASE)
+    {
+        D_key = false;
+    }
+
     // Se o usuário apertar a tecla espaço, resetamos os ângulos de Euler para zero.
     if (key == GLFW_KEY_SPACE && action == GLFW_PRESS)
     {
         g_AngleX = 0.0f;
         g_AngleY = 0.0f;
         g_AngleZ = 0.0f;
-        g_ForearmAngleX = 0.0f;
-        g_ForearmAngleZ = 0.0f;
-        g_TorsoPositionX = 0.0f;
-        g_TorsoPositionY = 0.0f;
     }
-
-    // Se o usuário apertar a tecla P, utilizamos projeção perspectiva.
-    if (key == GLFW_KEY_P && action == GLFW_PRESS)
-    {
-        g_UsePerspectiveProjection = true;
-    }
-
-    // Se o usuário apertar a tecla O, utilizamos projeção ortográfica.
-    if (key == GLFW_KEY_O && action == GLFW_PRESS)
-    {
-        g_UsePerspectiveProjection = false;
-    }
-
-    // Se o usuário apertar a tecla H, fazemos um "toggle" do texto informativo mostrado na tela.
-    if (key == GLFW_KEY_H && action == GLFW_PRESS)
-    {
-        g_ShowInfoText = !g_ShowInfoText;
-    }
-
-    // Se o usuário apertar a tecla R, recarregamos os shaders dos arquivos "shader_fragment.glsl" e "shader_vertex.glsl".
-    if (key == GLFW_KEY_R && action == GLFW_PRESS)
-    {
-        LoadShadersFromFiles();
-        fprintf(stdout,"Shaders recarregados!\n");
-        fflush(stdout);
-    }
-
-    //FONTE - Laboratório 2, Controle da camera pelo WASD
-    // andar pra frente
-    if(key == GLFW_KEY_W && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
-        glm::vec4 w = camera_view_vector * (-1/norm(camera_view_vector));
-        w.y = 0;
-        camera_position_c += w * -speed;
-    }
-
-    if(key == GLFW_KEY_S && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
-        glm::vec4 w = -camera_view_vector * (1/norm(camera_view_vector));
-        w.y = 0;
-        camera_position_c += w * speed;
-    }
-
-    if(key == GLFW_KEY_A && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
-        glm::vec4 w = -camera_view_vector * (1/norm(camera_view_vector));
-        glm::vec4 u = crossproduct(camera_up_vector, w);
-        u = u / norm(u);
-        camera_position_c += u * -speed;
-    }
-    if(key == GLFW_KEY_D && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
-        glm::vec4 w = -camera_view_vector * (1/norm(camera_view_vector));
-        glm::vec4 u = crossproduct(camera_up_vector, w);
-        u = u / norm(u);
-        camera_position_c += u * speed;
-    }
-
 }
 
 // Definimos o callback para impressão de erros da GLFW no terminal
