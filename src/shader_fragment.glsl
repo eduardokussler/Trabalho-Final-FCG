@@ -10,6 +10,7 @@ in vec4 normal;
 // Posição do vértice atual no sistema de coordenadas local do modelo.
 in vec4 position_model;
 
+in vec3 color_gouraud;
 // Coordenadas de textura obtidas do arquivo OBJ (se existirem!)
 in vec2 texcoords;
 
@@ -23,6 +24,7 @@ uniform mat4 projection;
 #define PLANE  1
 #define STAFF  2
 #define FIREBALL 3
+#define FLOOR 4
 uniform int object_id;
 
 // Parâmetros da axis-aligned bounding box (AABB) do modelo
@@ -64,7 +66,7 @@ void main()
     vec4 v = normalize(camera_position - p);
 
     // Vetor que define o sentido da fonte de luz em relação ao ponto atual.
-    vec4 l = normalize(vec4(1.0,1.0,0.0,0.0));
+    vec4 l = normalize(vec4(1.0,1.0,0.0,1.0) - p);
     //vec4 l = v;
     // Coordenadas de textura U e V
     float U = 0.0;
@@ -116,7 +118,7 @@ void main()
         Kd = texture(TextureImage0, vec2(U,V)).rgb;
         //kd = max(0,dot(n,l));
     }
-    else if ( object_id == PLANE )
+    else if ( object_id == FLOOR )
     {
         // Coordenadas de textura do plano, obtidas do arquivo OBJ.
         U = texcoords.x;
@@ -125,6 +127,7 @@ void main()
         q = 70;
         Kd = texture(TextureImage1, vec2(U,V)).rgb;
         Kd = Kd / 2;
+
     }
     else if ( object_id == STAFF )
     {
@@ -136,7 +139,8 @@ void main()
 
         float minz = bbox_min.z;
         float maxz = bbox_max.z;
-
+        l = normalize(camera_position - p);
+        r = -l + 2*n*(dot(n,l)); // o vetor de reflexão especular ideal
         U = (position_model.x - minx) / (maxx- minx);
         V = (position_model.z - minz) / (maxz- minz);
         Kd = texture(TextureImage2, vec2(U,V)).rgb;
@@ -144,40 +148,56 @@ void main()
     }
     else if ( object_id == FIREBALL ) //Fonte: Laboratório 5
     {
-        vec4 bbox_center = (bbox_min + bbox_max) / 2.0;
-        float ro = length(position_model - bbox_center);
-        vec4 p_linha = bbox_center + ro * normalize(position_model - bbox_center);
-        float theta = atan(p_linha.x, p_linha.z);
-        float phi = asin(p_linha.y/ro);
+        // vec4 bbox_center = (bbox_min + bbox_max) / 2.0;
+        // float ro = length(position_model - bbox_center);
+        // vec4 p_linha = bbox_center + ro * normalize(position_model - bbox_center);
+        // float theta = atan(p_linha.x, p_linha.z);
+        // float phi = asin(p_linha.y/ro);
 
-        U = (theta + M_PI) / (2*M_PI);
-        V = (phi + M_PI_2) / M_PI;
+        // U = (theta + M_PI) / (2*M_PI);
+        // V = (phi + M_PI_2) / M_PI;
 
-        Ks = vec3(0.0,0.0,0.0); // Refletância especular
+        // Ks = vec3(0.0,0.0,0.0); // Refletância especular
 
         calc_color = false;
 
-        Kd = texture(TextureImage3, vec2(U,V)).rgb;
+        // Kd = texture(TextureImage3, vec2(U,V)).rgb;
+        // color.rgb = Kd;
+        color.rgb = color_gouraud;
+    }
+    else if ( object_id == PLANE )
+    {
+        // Coordenadas de textura do plano, obtidas do arquivo OBJ.
+        U = texcoords.x;
+        V = texcoords.y;
+
+        q = 70;
+        Kd = texture(TextureImage1, vec2(U,V)).rgb;
+        Kd = Kd / 2;
+
         color.rgb = Kd;
+
+        calc_color = false;
+
     }
 
     if(calc_color)
     {
-    // Espectro da luz ambiente
-    vec3 Ia = vec3(0.2,0.2,0.2); // PREENCHA AQUI o espectro da luz ambiente
+        // Espectro da luz ambiente
+        vec3 Ia = vec3(0.2,0.2,0.2); // PREENCHA AQUI o espectro da luz ambiente
 
-    vec3 lambert_diffuse_term = Kd * I * max(0, dot(n,l)); // PREENCHA AQUI o termo difuso de Lambert
+        vec3 lambert_diffuse_term = Kd * I * max(0, dot(n,l)); // PREENCHA AQUI o termo difuso de Lambert
 
 
-    // Termo ambiente
-    vec3 ambient_term = Ka*Ia; // o termo ambiente
+        // Termo ambiente
+        vec3 ambient_term = Ka*Ia; // o termo ambiente
 
-    // Termo especular utilizando o modelo de iluminação de Phong
-    vec3 phong_specular_term  = Ks*I*pow(max(0, dot(r,v)), q); //o termo especular de Phong
+        // Termo especular utilizando o modelo de iluminação de Phong
+        vec3 phong_specular_term  = Ks*I*pow(max(0, dot(r,v)), q); //o termo especular de Phong
 
-    color.a = 1;
+        color.a = 1;
 
-    color.rgb = lambert_diffuse_term + ambient_term + phong_specular_term;
+        color.rgb = lambert_diffuse_term + ambient_term + phong_specular_term;
     }
 
     // NOTE: Se você quiser fazer o rendering de objetos transparentes, é
@@ -197,5 +217,5 @@ void main()
     // Cor final com correção gamma, considerando monitor sRGB.
     // Veja https://en.wikipedia.org/w/index.php?title=Gamma_correction&oldid=751281772#Windows.2C_Mac.2C_sRGB_and_TV.2Fvideo_standard_gammas
     color.rgb = pow(color.rgb, vec3(1.0,1.0,1.0)/2.2);
-} 
+}
 
