@@ -53,6 +53,9 @@
 #include "utils.h"
 #include "matrices.h"
 
+// Arquivo que define as colisões
+#include "collisions.hpp"
+
 // Estrutura que representa um modelo geométrico carregado a partir de um
 // arquivo ".obj". Veja https://en.wikipedia.org/wiki/Wavefront_.obj_file .
 struct ObjModel
@@ -211,7 +214,7 @@ float z = r*cos(g_CameraPhi)*cos(g_CameraTheta);
 float x = r*cos(g_CameraPhi)*sin(g_CameraTheta);
 
 //Posição do centro da câmera
-glm::vec4 camera_position_c  = glm::vec4(0.0f,0.0f,6.0f,1.0f); // Ponto "c", centro da câmera
+glm::vec4 camera_position_c  = glm::vec4(1.0f,0.0f,4.0f,1.0f); // Ponto "c", centro da câmera
 glm::vec4 camera_lookat_l    = glm::vec4(0.0f,0.0f,0.0f,1.0f); // Ponto "l", para onde a câmera (look-at) estará sempre olhando
 glm::vec4 camera_view_vector = glm::vec4(-x,0.0f,-z,0.0f); // Vetor "view", sentido para onde a câmera está virada
 glm::vec4 camera_up_vector   = glm::vec4(0.0f,1.0f,0.0f,0.0f); // Vetor "up" fixado para apontar para o "céu" (eixo Y global)up" fixado para apontar para o "céu" (eito Y global)
@@ -360,9 +363,19 @@ int main(int argc, char* argv[])
     glm::mat4 the_model;
     glm::mat4 the_view;
 
+    //Valores usados para o scaling da arena
+    float arena_X = 8.0f;
+    float arena_Y = 1.0f;
+    float arena_Z = 6.0f;
+
+
     // Desativar o mouse
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
+    double xpos_temp, ypos_temp;
+    glfwGetCursorPos(window, &xpos_temp, &ypos_temp);
+    // forçamos a chamada para o player estar olhando para o ponto correto desde o inicio
+    CursorPosCallback(window, xpos_temp, ypos_temp);
     // Ficamos em loop, renderizando, até que o usuário feche a janela
     while (!glfwWindowShouldClose(window))
     {
@@ -426,6 +439,24 @@ int main(int argc, char* argv[])
 
 		if(A_key)
 			camera_position_c += -u * speed;
+
+        //Colisoes com as paredes = colisão com um plano
+        if(collisionPlane(PlanoEmQualEixo::X, arena_X, camera_position_c)) {
+            camera_position_c.x = arena_X - 0.42;
+        }
+
+        if(collisionPlane(PlanoEmQualEixo::X, -arena_X, camera_position_c)) {
+            camera_position_c.x = arena_X + 0.42;
+        }
+
+        if(collisionPlane(PlanoEmQualEixo::Z, arena_Z, camera_position_c)) {
+            camera_position_c.z = arena_Z - 0.42;
+        }
+
+        if(collisionPlane(PlanoEmQualEixo::Z, -arena_Z, camera_position_c)) {
+            camera_position_c.z = arena_Z + 0.42;
+        }
+
 
         // Abaixo definimos as varáveis que efetivamente definem a câmera virtual.
         // Veja slides 195-227 e 229-234 do documento Aula_08_Sistemas_de_Coordenadas.pdf.
@@ -495,9 +526,6 @@ int main(int argc, char* argv[])
         //glUniform1i(object_id_uniform, PLANE);
         //DrawVirtualObject("plane");
 
-        float arena_X = 8.0f;
-        float arena_Y = 1.0f;
-        float arena_Z = 6.0f;
 
         //FONTE - Trabalho final
 
