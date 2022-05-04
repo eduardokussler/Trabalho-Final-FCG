@@ -217,6 +217,7 @@ glm::vec4 camera_view_vector = glm::vec4(-x,0.0f,-z,0.0f); // Vetor "view", sent
 glm::vec4 camera_up_vector   = glm::vec4(0.0f,1.0f,0.0f,0.0f); // Vetor "up" fixado para apontar para o "céu" (eixo Y global)up" fixado para apontar para o "céu" (eito Y global)
 float speed;
 float speed_dragon;
+float speed_fireball;
 bool dragon_direction = false;
 float g_deltaTime = 0.0f;
 float g_lastFrame = 0.0f;
@@ -398,6 +399,7 @@ int main(int argc, char* argv[])
 
         speed = 2.5f * g_deltaTime; //velocidade do player
         speed_dragon = speed / 1.6;
+        speed_fireball = speed * 1.3;
 
 
         // Fonte: Laboratório 2
@@ -534,8 +536,6 @@ int main(int argc, char* argv[])
         glUniform1i(object_id_uniform, PLANE);
         DrawVirtualObject("plane");
 
-        glm::vec4 pos_inicial_dragao = glm::vec4(0.5f,3.5f,0.0f, 1.0f);
-        pos_inicial_dragao = pos_inicial_dragao/norm(pos_inicial_dragao);
 
         if(caminho_percorrido > 1.5)
         {
@@ -588,6 +588,10 @@ int main(int argc, char* argv[])
             DrawVirtualObject("staff");
         PopMatrix(model);
 
+
+        //Bola de fogo precisa se mover em direção ao player
+        // O vetor que aponta para o player a partir da posição da fireball é:
+        // Posição do player - posição da fireball
         model = Matrix_Translate(0.0f,1.1f,0.0f)
                 *Matrix_Scale(0.05f, 0.05f, 0.05f);
         glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
