@@ -10,6 +10,7 @@ in vec4 normal;
 // Posição do vértice atual no sistema de coordenadas local do modelo.
 in vec4 position_model;
 
+in vec3 color_gouraud;
 // Coordenadas de textura obtidas do arquivo OBJ (se existirem!)
 in vec2 texcoords;
 
@@ -65,7 +66,7 @@ void main()
     vec4 v = normalize(camera_position - p);
 
     // Vetor que define o sentido da fonte de luz em relação ao ponto atual.
-    vec4 l = normalize(vec4(1.0,1.0,0.0,0.0));
+    vec4 l = normalize(vec4(1.0,1.0,0.0,1.0) - p);
     //vec4 l = v;
     // Coordenadas de textura U e V
     float U = 0.0;
@@ -138,7 +139,8 @@ void main()
 
         float minz = bbox_min.z;
         float maxz = bbox_max.z;
-
+        l = normalize(camera_position - p);
+        r = -l + 2*n*(dot(n,l)); // o vetor de reflexão especular ideal
         U = (position_model.x - minx) / (maxx- minx);
         V = (position_model.z - minz) / (maxz- minz);
         Kd = texture(TextureImage2, vec2(U,V)).rgb;
@@ -146,21 +148,22 @@ void main()
     }
     else if ( object_id == FIREBALL ) //Fonte: Laboratório 5
     {
-        vec4 bbox_center = (bbox_min + bbox_max) / 2.0;
-        float ro = length(position_model - bbox_center);
-        vec4 p_linha = bbox_center + ro * normalize(position_model - bbox_center);
-        float theta = atan(p_linha.x, p_linha.z);
-        float phi = asin(p_linha.y/ro);
+        // vec4 bbox_center = (bbox_min + bbox_max) / 2.0;
+        // float ro = length(position_model - bbox_center);
+        // vec4 p_linha = bbox_center + ro * normalize(position_model - bbox_center);
+        // float theta = atan(p_linha.x, p_linha.z);
+        // float phi = asin(p_linha.y/ro);
 
-        U = (theta + M_PI) / (2*M_PI);
-        V = (phi + M_PI_2) / M_PI;
+        // U = (theta + M_PI) / (2*M_PI);
+        // V = (phi + M_PI_2) / M_PI;
 
-        Ks = vec3(0.0,0.0,0.0); // Refletância especular
+        // Ks = vec3(0.0,0.0,0.0); // Refletância especular
 
-        calc_color = false;
+        // calc_color = false;
 
-        Kd = texture(TextureImage3, vec2(U,V)).rgb;
-        color.rgb = Kd;
+        // Kd = texture(TextureImage3, vec2(U,V)).rgb;
+        // color.rgb = Kd;
+        color.rgb = color_gouraud;
     }
     else if ( object_id == PLANE )
     {

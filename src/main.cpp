@@ -125,7 +125,6 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mode
 void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
 void CursorPosCallback(GLFWwindow* window, double xpos, double ypos);
 void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset);
-
 // Definimos uma estrutura que armazenará dados necessários para renderizar
 // cada objeto da cena virtual.
 struct SceneObject
@@ -540,14 +539,14 @@ int main(int argc, char* argv[])
 
         if(tempo > 2)
         {
-            tempo = 0;
+            tempo = 2;
             dragon_direction = !dragon_direction;
         }
 
         else if (tempo <= -2)
         {
             dragon_direction = !dragon_direction;
-            tempo = -4;
+            tempo = -2;
         }
 
 
@@ -600,15 +599,20 @@ int main(int argc, char* argv[])
 
         // Imprimimos na tela os ângulos de Euler que controlam a rotação do
         // terceiro cubo.
-        TextRendering_ShowEulerAngles(window);
+        //TextRendering_ShowEulerAngles(window);
 
         // Imprimimos na informação sobre a matriz de projeção sendo utilizada.
-        TextRendering_ShowProjection(window);
+        //TextRendering_ShowProjection(window);
 
         // Imprimimos na tela informação sobre o número de quadros renderizados
         // por segundo (frames per second).
         TextRendering_ShowFramesPerSecond(window);
 
+        // Implementação da mira
+        char buffer[2];
+        snprintf(buffer, 2, "x");
+        // Printa em NDC, logo, o centro da tela é (0,0)
+        TextRendering_PrintString(window, buffer, 0, 0, 1.0f);
         // O framebuffer onde OpenGL executa as operações de renderização não
         // é o mesmo que está sendo mostrado para o usuário, caso contrário
         // seria possível ver artefatos conhecidos como "screen tearing". A
