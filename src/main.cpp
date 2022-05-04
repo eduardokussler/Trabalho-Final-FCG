@@ -215,13 +215,15 @@ glm::vec4 camera_position_c  = glm::vec4(0.0f,0.0f,6.0f,1.0f); // Ponto "c", cen
 glm::vec4 camera_lookat_l    = glm::vec4(0.0f,0.0f,0.0f,1.0f); // Ponto "l", para onde a câmera (look-at) estará sempre olhando
 glm::vec4 camera_view_vector = glm::vec4(-x,0.0f,-z,0.0f); // Vetor "view", sentido para onde a câmera está virada
 glm::vec4 camera_up_vector   = glm::vec4(0.0f,1.0f,0.0f,0.0f); // Vetor "up" fixado para apontar para o "céu" (eixo Y global)up" fixado para apontar para o "céu" (eito Y global)
+
+// FONTE: Trabalho final
 float speed;
 float speed_dragon;
 float speed_fireball;
 bool dragon_direction = false;
 float g_deltaTime = 0.0f;
 float g_lastFrame = 0.0f;
-
+glm::vec4 fireball_pos;
 
 // Lab 2
 bool W_key = false;
@@ -232,7 +234,7 @@ bool D_key = false;
 // Bezier
 glm::vec4 bezier(float pos, glm::vec4 pc1, glm::vec4 pc2, glm::vec4 pc3, glm::vec4 pc4);
 
-
+bool fireball_fired = false;
 
 int main(int argc, char* argv[])
 {
@@ -588,16 +590,29 @@ int main(int argc, char* argv[])
             DrawVirtualObject("staff");
         PopMatrix(model);
 
-
+        if(!fireball_fired) {
+            fireball_pos = pos_dragao;
+            fireball_fired = true;
+        }
         //Bola de fogo precisa se mover em direção ao player
         // O vetor que aponta para o player a partir da posição da fireball é:
         // Posição do player - posição da fireball
-        model = Matrix_Translate(0.0f,1.1f,0.0f)
+        glm::vec4 direcaoDoPlayer = camera_position_c - fireball_pos;
+
+        glm::vec4 nova_fireball_pos = glm::vec4(fireball_pos.x + direcaoDoPlayer.x * speed_fireball,
+                                fireball_pos.y + direcaoDoPlayer.y * speed_fireball,
+                                fireball_pos.z + direcaoDoPlayer.z * speed_fireball, 1.0f);
+        model = Matrix_Translate(nova_fireball_pos.x, nova_fireball_pos.y, nova_fireball_pos.z)
                 *Matrix_Scale(0.05f, 0.05f, 0.05f);
         glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
         glUniform1i(object_id_uniform, FIREBALL);
         DrawVirtualObject("fireball");
+        fireball_pos = nova_fireball_pos;
 
+        // SIMULANDO UMA COLISÃO
+        if(norm(fireball_pos - camera_position_c) < 0.1) {
+            fireball_fired = false;
+        }
 
 
 
