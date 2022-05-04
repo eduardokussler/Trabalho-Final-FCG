@@ -214,7 +214,7 @@ float z = r*cos(g_CameraPhi)*cos(g_CameraTheta);
 float x = r*cos(g_CameraPhi)*sin(g_CameraTheta);
 
 //Posição do centro da câmera
-glm::vec4 camera_position_c  = glm::vec4(0.0f,0.0f,6.0f,1.0f); // Ponto "c", centro da câmera
+glm::vec4 camera_position_c  = glm::vec4(1.0f,0.0f,4.0f,1.0f); // Ponto "c", centro da câmera
 glm::vec4 camera_lookat_l    = glm::vec4(0.0f,0.0f,0.0f,1.0f); // Ponto "l", para onde a câmera (look-at) estará sempre olhando
 glm::vec4 camera_view_vector = glm::vec4(-x,0.0f,-z,0.0f); // Vetor "view", sentido para onde a câmera está virada
 glm::vec4 camera_up_vector   = glm::vec4(0.0f,1.0f,0.0f,0.0f); // Vetor "up" fixado para apontar para o "céu" (eixo Y global)up" fixado para apontar para o "céu" (eito Y global)
@@ -372,6 +372,10 @@ int main(int argc, char* argv[])
     // Desativar o mouse
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
+    double xpos_temp, ypos_temp;
+    glfwGetCursorPos(window, &xpos_temp, &ypos_temp);
+    // forçamos a chamada para o player estar olhando para o ponto correto desde o inicio
+    CursorPosCallback(window, xpos_temp, ypos_temp);
     // Ficamos em loop, renderizando, até que o usuário feche a janela
     while (!glfwWindowShouldClose(window))
     {

@@ -1594,7 +1594,7 @@
 	<fstream>
 	<sstream>
 
-1651705969 source:d:\programação\trabalho-final-fcg\src\main.cpp
+1651708363 source:d:\programação\trabalho-final-fcg\src\main.cpp
 	<cmath>
 	<cstdio>
 	<iostream>
@@ -1617,7 +1617,7 @@
 	<stb_image.h>
 	"utils.h"
 	"matrices.h"
-	"colisions.cpp"
+	"collisions.hpp"
 
 1648506708 d:\programação\trabalho-final-fcg\include\glm\gtc\type_ptr.hpp
 	"../gtc/quaternion.hpp"
