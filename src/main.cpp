@@ -53,6 +53,9 @@
 #include "utils.h"
 #include "matrices.h"
 
+// Arquivo que define as colisões
+#include "collisions.hpp"
+
 // Estrutura que representa um modelo geométrico carregado a partir de um
 // arquivo ".obj". Veja https://en.wikipedia.org/wiki/Wavefront_.obj_file .
 struct ObjModel
@@ -360,6 +363,12 @@ int main(int argc, char* argv[])
     glm::mat4 the_model;
     glm::mat4 the_view;
 
+    //Valores usados para o scaling da arena
+    float arena_X = 8.0f;
+    float arena_Y = 1.0f;
+    float arena_Z = 6.0f;
+
+
     // Desativar o mouse
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
@@ -426,6 +435,24 @@ int main(int argc, char* argv[])
 
 		if(A_key)
 			camera_position_c += -u * speed;
+
+        //Colisoes com as paredes = colisão com um plano
+        if(collisionPlane(PlanoEmQualEixo::X, arena_X, camera_position_c)) {
+            camera_position_c.x = arena_X - 0.42;
+        }
+
+        if(collisionPlane(PlanoEmQualEixo::X, -arena_X, camera_position_c)) {
+            camera_position_c.x = arena_X + 0.42;
+        }
+
+        if(collisionPlane(PlanoEmQualEixo::Z, arena_Z, camera_position_c)) {
+            camera_position_c.z = arena_Z - 0.42;
+        }
+
+        if(collisionPlane(PlanoEmQualEixo::Z, -arena_Z, camera_position_c)) {
+            camera_position_c.z = arena_Z + 0.42;
+        }
+
 
         // Abaixo definimos as varáveis que efetivamente definem a câmera virtual.
         // Veja slides 195-227 e 229-234 do documento Aula_08_Sistemas_de_Coordenadas.pdf.
@@ -495,9 +522,6 @@ int main(int argc, char* argv[])
         //glUniform1i(object_id_uniform, PLANE);
         //DrawVirtualObject("plane");
 
-        float arena_X = 8.0f;
-        float arena_Y = 1.0f;
-        float arena_Z = 6.0f;
 
         //FONTE - Trabalho final
 
