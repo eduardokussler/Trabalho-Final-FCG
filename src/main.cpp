@@ -120,6 +120,11 @@ void TextRendering_ShowEulerAngles(GLFWwindow* window);
 void TextRendering_ShowProjection(GLFWwindow* window);
 void TextRendering_ShowFramesPerSecond(GLFWwindow* window);
 
+
+//Fonte trabalho final
+void TextRendering_ShowDragonsHP(GLFWwindow* window, int hp);
+void TextRendering_ShowPlayersHP(GLFWwindow* window, int hp);
+
 // Funções callback para comunicação com o sistema operacional e interação do
 // usuário. Veja mais comentários nas definições das mesmas, abaixo.
 void FramebufferSizeCallback(GLFWwindow* window, int width, int height);
@@ -238,6 +243,12 @@ bool D_key = false;
 glm::vec4 bezier(float pos, glm::vec4 pc1, glm::vec4 pc2, glm::vec4 pc3, glm::vec4 pc4);
 
 bool fireball_fired = false;
+
+int dragon_hp = 100;
+int player_hp = 100;
+int player_damage = 10;
+int fireball_hp = 20;
+int fireball_damage = 20;
 
 int main(int argc, char* argv[])
 {
@@ -660,6 +671,8 @@ int main(int argc, char* argv[])
         snprintf(buffer, 2, "x");
         // Printa em NDC, logo, o centro da tela é (0,0)
         TextRendering_PrintString(window, buffer, 0, 0, 1.0f);
+        TextRendering_ShowDragonsHP(window, dragon_hp);
+        TextRendering_ShowPlayersHP(window, player_hp);
         // O framebuffer onde OpenGL executa as operações de renderização não
         // é o mesmo que está sendo mostrado para o usuário, caso contrário
         // seria possível ver artefatos conhecidos como "screen tearing". A
@@ -832,6 +845,36 @@ glm::vec4 bezier(float pos, glm::vec4 pc1, glm::vec4 pc2, glm::vec4 pc3, glm::ve
 
     return  glm::vec4(b0[0] + b1[0] + b2[0] + b3[0],b0[1] + b1[1] + b2[1] + b3[1],b0[2] + b1[2] + b2[2] + b3[2], 1.0f);
 }
+
+//Printar a vida do player e do dragão
+void TextRendering_ShowDragonsHP(GLFWwindow* window, int hp)
+{
+    std::stringstream text{""};
+    text << "Dragon: " << hp << "/100";
+    std::string txt = text.str();
+    static char  buffer[20];
+    strcpy(buffer, txt.c_str());
+
+    float lineheight = TextRendering_LineHeight(window);
+    float charwidth = TextRendering_CharWidth(window);
+
+    TextRendering_PrintString(window, buffer,  -1.0f, 1.0f-lineheight, 1.0f);
+}
+
+void TextRendering_ShowPlayersHP(GLFWwindow* window, int hp)
+{
+    std::stringstream text{""};
+    text << "Player: " << hp << "/100";
+    std::string txt = text.str();
+    static char  buffer[20];
+    strcpy(buffer, txt.c_str());
+
+    float lineheight = TextRendering_LineHeight(window);
+    float charwidth = TextRendering_CharWidth(window);
+
+    TextRendering_PrintString(window, buffer, -1.0f, 1.0f-lineheight*2, 1.0f);
+}
+
 
 // Função que pega a matriz M e guarda a mesma no topo da pilha
 void PushMatrix(glm::mat4 M)

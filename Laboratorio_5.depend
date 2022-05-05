@@ -985,7 +985,7 @@
 	<intrin.h>
 	<arm_neon.h>
 
-1648506708 source:d:\programação\trabalho-final-fcg\src\textrendering.cpp
+1651710165 source:d:\programação\trabalho-final-fcg\src\textrendering.cpp
 	<string>
 	<glad/glad.h>
 	<GLFW/glfw3.h>
@@ -1594,7 +1594,7 @@
 	<fstream>
 	<sstream>
 
-1651708363 source:d:\programação\trabalho-final-fcg\src\main.cpp
+1651709894 source:d:\programação\trabalho-final-fcg\src\main.cpp
 	<cmath>
 	<cstdio>
 	<iostream>
@@ -2833,10 +2833,10 @@
 	<glm/vec4.hpp>
 	<glm/gtc/type_ptr.hpp>
 
-1651707582 source:d:\programação\trabalho-final-fcg\src\collisions.cpp
+1651708811 source:d:\programação\trabalho-final-fcg\src\collisions.cpp
 	"collisions.hpp"
 
-1651707579 d:\programação\trabalho-final-fcg\include\collisions.hpp
+1651708811 d:\programação\trabalho-final-fcg\include\collisions.hpp
 	<glm/mat4x4.hpp>
 	<glm/vec4.hpp>
 	<glm/gtc/type_ptr.hpp>
