@@ -985,7 +985,7 @@
 	<intrin.h>
 	<arm_neon.h>
 
-1651710165 source:d:\programação\trabalho-final-fcg\src\textrendering.cpp
+1651710364 source:d:\programação\trabalho-final-fcg\src\textrendering.cpp
 	<string>
 	<glad/glad.h>
 	<GLFW/glfw3.h>
@@ -1594,7 +1594,7 @@
 	<fstream>
 	<sstream>
 
-1651709894 source:d:\programação\trabalho-final-fcg\src\main.cpp
+1651710364 source:d:\programação\trabalho-final-fcg\src\main.cpp
 	<cmath>
 	<cstdio>
 	<iostream>
