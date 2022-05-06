@@ -149,22 +149,22 @@ void main()
     }
     else if ( object_id == FIREBALL ) //Fonte: Laboratório 5
     {
-        // vec4 bbox_center = (bbox_min + bbox_max) / 2.0;
-        // float ro = length(position_model - bbox_center);
-        // vec4 p_linha = bbox_center + ro * normalize(position_model - bbox_center);
-        // float theta = atan(p_linha.x, p_linha.z);
-        // float phi = asin(p_linha.y/ro);
+        vec4 bbox_center = (bbox_min + bbox_max) / 2.0;
+        float ro = length(position_model - bbox_center);
+        vec4 p_linha = bbox_center + ro * normalize(position_model - bbox_center);
+        float theta = atan(p_linha.x, p_linha.z);
+        float phi = asin(p_linha.y/ro);
 
-        // U = (theta + M_PI) / (2*M_PI);
-        // V = (phi + M_PI_2) / M_PI;
+        U = (theta + M_PI) / (2*M_PI);
+        V = (phi + M_PI_2) / M_PI;
 
         // Ks = vec3(0.0,0.0,0.0); // Refletância especular
 
         calc_color = false;
 
-        // Kd = texture(TextureImage3, vec2(U,V)).rgb;
+        Kd = texture(TextureImage3, vec2(U,V)).rgb;
         // color.rgb = Kd;
-        color.rgb = color_gouraud;
+        color.rgb = color_gouraud * Kd;
     }
     else if ( object_id == PLANE )
     {

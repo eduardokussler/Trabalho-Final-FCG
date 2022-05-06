@@ -29,35 +29,6 @@ bool collisionPlane(PlanoEmQualEixo eixo, float planePos, glm::vec4 pos) {
         }
 }
 
-// Colisao Player-Fireball
-// Fonte: https://developer.mozilla.org/en-US/docs/Games/Techniques/3D_collision_detection
-bool collisionPlayerFireball(glm::vec4 Playerpos, glm::vec3 player_size, glm::vec4 Fireballpos, float raio){
-
-    glm::vec3 bbox_max_player = glm::vec3 (Playerpos.x + player_size.x, Playerpos.y + player_size.y, Playerpos.z + player_size.z);
-    glm::vec3 bbox_min_player = glm::vec3 (Playerpos.x - player_size.x, Playerpos.y - player_size.y, Playerpos.z - player_size.z);
-
-    float x = glm::max(bbox_min_player.x, glm::min(Fireballpos.x, bbox_max_player.x));
-    float y = glm::max(bbox_min_player.y, glm::min(Fireballpos.y, bbox_max_player.y));
-    float z = glm::max(bbox_min_player.z, glm::min(Fireballpos.z, bbox_max_player.z));
-
-    // this is the same as isPointInsideSphere
-    glm::vec4 distance = glm::vec4(x - Fireballpos.x, y - Fireballpos.y, z - Fireballpos.z, 0.0f);
-    return false;
-    //return norm(distance) <= raio;
-/*
-    if (Playerpos.x + player_size.x >= Fireballpos.x - raio || Playerpos.x - player_size.x <= Fireballpos.x + raio){
-        return true;
-    }
-    if (Playerpos.y - player_size.y <= Fireballpos.y + raio || Playerpos.y + player_size.y >= Fireballpos.y - raio){
-        return true;
-    }
-    if (Playerpos.z + player_size.z >= Fireballpos.z - raio || Playerpos.z - player_size.z <= Fireballpos.z + raio){
-        return true;
-    }
-
-    return false;*/
-
-}
 
 // Colisao Projetil-Fireball
 bool collisionProjectileFireball(glm::vec4 Projectilepos, glm::vec4 Fireballpos, float raio){

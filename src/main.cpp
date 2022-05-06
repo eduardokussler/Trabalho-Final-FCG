@@ -119,6 +119,8 @@ void TextRendering_ShowModelViewProjection(GLFWwindow* window, glm::mat4 project
 void TextRendering_ShowEulerAngles(GLFWwindow* window);
 void TextRendering_ShowProjection(GLFWwindow* window);
 void TextRendering_ShowFramesPerSecond(GLFWwindow* window);
+void TextRendering_LoseScreen(GLFWwindow* window);
+void TextRendering_VictoryScreen(GLFWwindow* window);
 
 
 //Fonte trabalho final
@@ -464,6 +466,29 @@ int main(int argc, char* argv[])
         glm::vec4 old_pos;
         old_pos = camera_position_c;
 
+        // Abaixo definimos as varáveis que efetivamente definem a câmera virtual.
+        // Veja slides 195-227 e 229-234 do documento Aula_08_Sistemas_de_Coordenadas.pdf.
+        //FONTE, comentamos linha abaixo para que a posição c não seja sobrescrita
+        // e seja controlada pelo usuário
+        //camera_position_c  = glm::vec4(x,y,z,1.0f); // Ponto "c", centro da câmera
+        camera_lookat_l    = glm::vec4(0.0f,0.0f,0.0f,1.0f); // Ponto "l", para onde a câmera (look-at) estará sempre olhando
+        // FONTE, laboratório 2
+        if(player_hp <= 0 || dragon_hp <= 0) {
+            glm::vec4 camera_lookat_position = glm::vec4(x,y,z,1.0f);
+            camera_view_vector = camera_lookat_l - camera_lookat_position;//glm::vec4(x,-y,z, 0.0f); // Vetor "view", sentido para onde a câmera está virada
+            speed = 0;            
+        } else {
+            camera_view_vector = glm::vec4(x,-y,z,0.0f);
+        }
+        camera_up_vector   = glm::vec4(0.0f,1.0f,0.0f,0.0f); // Vetor "up" fixado para apontar para o "céu" (eito Y global)
+        //Termina camera look at
+
+
+        // Computamos a matriz "View" utilizando os parâmetros da câmera para
+        // definir o sistema de coordenadas da câmera.  Veja slides 2-14, 184-190 e 236-242 do documento Aula_08_Sistemas_de_Coordenadas.pdf.
+        glm::mat4 view = Matrix_Camera_View(camera_position_c, camera_view_vector, camera_up_vector);
+
+
 		if(W_key)
 			camera_position_c += -w * speed;
 
@@ -475,26 +500,6 @@ int main(int argc, char* argv[])
 
 		if(A_key)
 			camera_position_c += -u * speed;
-
-
-        // Abaixo definimos as varáveis que efetivamente definem a câmera virtual.
-        // Veja slides 195-227 e 229-234 do documento Aula_08_Sistemas_de_Coordenadas.pdf.
-        //FONTE, comentamos linha abaixo para que a posição c não seja sobrescrita
-        // e seja controlada pelo usuário
-        //camera_position_c  = glm::vec4(x,y,z,1.0f); // Ponto "c", centro da câmera
-        camera_lookat_l    = glm::vec4(0.0f,0.0f,0.0f,1.0f); // Ponto "l", para onde a câmera (look-at) estará sempre olhando
-        // FONTE, laboratório 2
-        // if camera look_at
-        //glm::vec4 camera_lookat_position = glm::vec4(x,y,z,1.0f);
-        //camera_view_vector = camera_lookat_l - camera_lookat_position;//glm::vec4(x,-y,z, 0.0f); // Vetor "view", sentido para onde a câmera está virada
-        camera_up_vector   = glm::vec4(0.0f,1.0f,0.0f,0.0f); // Vetor "up" fixado para apontar para o "céu" (eito Y global)
-        //Termina camera look at
-
-        camera_view_vector = glm::vec4(x,-y,z,0.0f);
-
-        // Computamos a matriz "View" utilizando os parâmetros da câmera para
-        // definir o sistema de coordenadas da câmera.  Veja slides 2-14, 184-190 e 236-242 do documento Aula_08_Sistemas_de_Coordenadas.pdf.
-        glm::mat4 view = Matrix_Camera_View(camera_position_c, camera_view_vector, camera_up_vector);
 
         // Agora computamos a matriz de Projeção.
         glm::mat4 projection;
@@ -697,7 +702,7 @@ int main(int argc, char* argv[])
                                     projectile_pos.y + camera_view_vector.y * speed_projectile,
                                     projectile_pos.z + camera_view_vector.z * speed_projectile, 1.0f);
 
-            projectile_pos = nova_projectile_pos;  
+            projectile_pos = nova_projectile_pos;
 
             if(collisionProjectileFireball(projectile_pos, fireball_pos, raio)) {
                 projectile_fired = false;
@@ -738,11 +743,10 @@ int main(int argc, char* argv[])
         }
 
         // PLAYER-FIREBALL
-/*
-        if(collisionPlayerFireball(camera_position_c, glm::vec3(0.2f, 0.2f, 0.2f), fireball_temp, raio)){
+        if(norm(fireball_pos - camera_position_c) < 0.2) {
             player_hp = player_hp - fireball_damage;
             fireball_fired = false;
-        }*/
+        }
 
 
         // Imprimimos na tela os ângulos de Euler que controlam a rotação do
@@ -763,6 +767,10 @@ int main(int argc, char* argv[])
         TextRendering_PrintString(window, buffer, 0, 0, 1.0f);
         TextRendering_ShowDragonsHP(window, dragon_hp);
         TextRendering_ShowPlayersHP(window, player_hp);
+        if(player_hp <= 0)
+            TextRendering_LoseScreen(window);
+        if(dragon_hp <= 0)
+            TextRendering_VictoryScreen(window);
         // O framebuffer onde OpenGL executa as operações de renderização não
         // é o mesmo que está sendo mostrado para o usuário, caso contrário
         // seria possível ver artefatos conhecidos como "screen tearing". A
@@ -963,6 +971,27 @@ void TextRendering_ShowPlayersHP(GLFWwindow* window, int hp)
     float charwidth = TextRendering_CharWidth(window);
 
     TextRendering_PrintString(window, buffer, -1.0f, 1.0f-lineheight*2, 1.0f);
+}
+
+void TextRendering_LoseScreen(GLFWwindow* window) {
+    std::stringstream text{""};
+    text << "Voce perdeu!";
+    std::string txt = text.str();
+    static char  buffer[20];
+    strcpy(buffer, txt.c_str());
+
+
+    TextRendering_PrintString(window, buffer, -.5f, 0.0f, 4.0f);
+}
+void TextRendering_VictoryScreen(GLFWwindow* window) {
+    std::stringstream text{""};
+    text << "Voce perdeu!";
+    std::string txt = text.str();
+    static char  buffer[20];
+    strcpy(buffer, txt.c_str());
+
+
+    TextRendering_PrintString(window, buffer, -.5f, 0.0f, 4.0f);
 }
 
 
