@@ -659,20 +659,22 @@ int main(int argc, char* argv[])
             fireball_hp = FIREBALL_HP;
         }
 
-        // Bola de fogo precisa se mover em direção ao player
-        // O vetor que aponta para o player a partir da posição da fireball é:
-        // Posição do player - posição da fireball
-        glm::vec4 direcaoDoPlayer = camera_position_c - fireball_pos;
+        if(dragon_hp > 0 && player_hp > 0) {
+            // Bola de fogo precisa se mover em direção ao player
+            // O vetor que aponta para o player a partir da posição da fireball é:
+            // Posição do player - posição da fireball
+            glm::vec4 direcaoDoPlayer = camera_position_c - fireball_pos;
 
-        glm::vec4 nova_fireball_pos = glm::vec4(fireball_pos.x + direcaoDoPlayer.x * speed_fireball,
-                                fireball_pos.y + direcaoDoPlayer.y * speed_fireball,
-                                fireball_pos.z + direcaoDoPlayer.z * speed_fireball, 1.0f);
-        model = Matrix_Translate(nova_fireball_pos.x, nova_fireball_pos.y, nova_fireball_pos.z)
-                *Matrix_Scale(0.02f, 0.02f, 0.02f);
-        glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
-        glUniform1i(object_id_uniform, FIREBALL);
-        DrawVirtualObject("fireball");
-        fireball_pos = nova_fireball_pos;
+            glm::vec4 nova_fireball_pos = glm::vec4(fireball_pos.x + direcaoDoPlayer.x * speed_fireball,
+                                    fireball_pos.y + direcaoDoPlayer.y * speed_fireball,
+                                    fireball_pos.z + direcaoDoPlayer.z * speed_fireball, 1.0f);
+            model = Matrix_Translate(nova_fireball_pos.x, nova_fireball_pos.y, nova_fireball_pos.z)
+                    *Matrix_Scale(0.02f, 0.02f, 0.02f);
+            glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+            glUniform1i(object_id_uniform, FIREBALL);
+            DrawVirtualObject("fireball");
+            fireball_pos = nova_fireball_pos;
+        }
 
         glm::vec3 fireball_center = 0.5f * (g_VirtualScene["fireball"].bbox_max - g_VirtualScene["fireball"].bbox_min) + g_VirtualScene["fireball"].bbox_min;
         glm::vec4 fireball_temp = model * glm::vec4(fireball_center.x, fireball_center.y, fireball_center.z, 1.0f);
@@ -683,7 +685,7 @@ int main(int argc, char* argv[])
 
         float raio = g_VirtualScene["fireball"].bbox_max.x - g_VirtualScene["fireball"].bbox_min.x;
 
-        if(projectile_fired == true){
+        if(projectile_fired == true && player_hp > 0){
             model = Matrix_Identity();
             model = model * Matrix_Translate(projectile_pos.x , projectile_pos.y, projectile_pos.z)
                         * Matrix_Rotate_Y(g_CameraTheta)
@@ -707,6 +709,12 @@ int main(int argc, char* argv[])
             if(collisionProjectileFireball(projectile_pos, fireball_pos, raio)) {
                 projectile_fired = false;
                 fireball_hp = fireball_hp - player_damage;
+            }
+
+            // PROJETIL E DRAGAO
+            if(collisionProjectileDragon(bbox_min_world_dragon, bbox_max_world_dragon, projectile_pos)) {
+                projectile_fired = false;
+                dragon_hp -= player_damage;
             }
         }
 
@@ -767,10 +775,12 @@ int main(int argc, char* argv[])
         TextRendering_PrintString(window, buffer, 0, 0, 1.0f);
         TextRendering_ShowDragonsHP(window, dragon_hp);
         TextRendering_ShowPlayersHP(window, player_hp);
-        if(player_hp <= 0)
-            TextRendering_LoseScreen(window);
+
         if(dragon_hp <= 0)
             TextRendering_VictoryScreen(window);
+        else if(player_hp <= 0)
+            TextRendering_LoseScreen(window);
+        
         // O framebuffer onde OpenGL executa as operações de renderização não
         // é o mesmo que está sendo mostrado para o usuário, caso contrário
         // seria possível ver artefatos conhecidos como "screen tearing". A
@@ -985,7 +995,7 @@ void TextRendering_LoseScreen(GLFWwindow* window) {
 }
 void TextRendering_VictoryScreen(GLFWwindow* window) {
     std::stringstream text{""};
-    text << "Voce perdeu!";
+    text << "Voce Venceu!";
     std::string txt = text.str();
     static char  buffer[20];
     strcpy(buffer, txt.c_str());
