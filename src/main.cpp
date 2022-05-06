@@ -218,8 +218,10 @@ float y = r*sin(g_CameraPhi);
 float z = r*cos(g_CameraPhi)*cos(g_CameraTheta);
 float x = r*cos(g_CameraPhi)*sin(g_CameraTheta);
 
+const glm::vec4 initial_pos = glm::vec4(1.0f,0.0f,4.0f,1.0f);
+
 //Posição do centro da câmera
-glm::vec4 camera_position_c  = glm::vec4(1.0f,0.0f,4.0f,1.0f); // Ponto "c", centro da câmera
+glm::vec4 camera_position_c  = initial_pos; // Ponto "c", centro da câmera
 glm::vec4 camera_lookat_l    = glm::vec4(0.0f,0.0f,0.0f,1.0f); // Ponto "l", para onde a câmera (look-at) estará sempre olhando
 glm::vec4 camera_view_vector = glm::vec4(-x,0.0f,-z,0.0f); // Vetor "view", sentido para onde a câmera está virada
 glm::vec4 camera_up_vector   = glm::vec4(0.0f,1.0f,0.0f,0.0f); // Vetor "up" fixado para apontar para o "céu" (eixo Y global)up" fixado para apontar para o "céu" (eito Y global)
@@ -228,10 +230,12 @@ glm::vec4 camera_up_vector   = glm::vec4(0.0f,1.0f,0.0f,0.0f); // Vetor "up" fix
 float speed;
 float speed_dragon;
 float speed_fireball;
+float speed_projectile;
 bool dragon_direction = false;
 float g_deltaTime = 0.0f;
 float g_lastFrame = 0.0f;
 glm::vec4 fireball_pos;
+glm::vec4 projectile_pos;
 
 // Lab 2
 bool W_key = false;
@@ -243,12 +247,25 @@ bool D_key = false;
 glm::vec4 bezier(float pos, glm::vec4 pc1, glm::vec4 pc2, glm::vec4 pc3, glm::vec4 pc4);
 
 bool fireball_fired = false;
+bool projectile_fired = false;
 
-int dragon_hp = 100;
-int player_hp = 100;
-int player_damage = 10;
-int fireball_hp = 20;
-int fireball_damage = 20;
+const int DRAGON_HP = 100;
+int dragon_hp = DRAGON_HP;
+
+const int PLAYER_HP = 100;
+int player_hp = PLAYER_HP;
+
+const int PLAYER_DAMAGE = 10;
+int player_damage = PLAYER_DAMAGE;     //dano geral que o player da
+
+const int FIREBALL_HP = 20;
+int fireball_hp = FIREBALL_HP;       //fireball precisa de 2 tiros para sumir
+
+const int FIREBALL_DAMAMGE = 20;
+int fireball_damage = FIREBALL_DAMAMGE;   //dano que a fireball da no player
+
+const int DRAGON_DAMAGE = 40;
+int dragon_damage = DRAGON_DAMAGE;     //dano que dragao da na colisao com o player
 
 int main(int argc, char* argv[])
 {
@@ -350,6 +367,10 @@ int main(int argc, char* argv[])
     ComputeNormals(&fireballmodel);
     BuildTrianglesAndAddToVirtualScene(&fireballmodel);
 
+    ObjModel projectilemodel("../../data/projectile.obj");
+    ComputeNormals(&projectilemodel);
+    BuildTrianglesAndAddToVirtualScene(&projectilemodel);
+
 
     if ( argc > 1 )
     {
@@ -426,6 +447,7 @@ int main(int argc, char* argv[])
         speed = 2.5f * g_deltaTime; //velocidade do player
         speed_dragon = speed / 1.6;
         speed_fireball = speed * 1.3;
+        speed_projectile = speed * 3;
 
 
         // Fonte: Laboratório 2
@@ -439,6 +461,9 @@ int main(int argc, char* argv[])
 
 		w.y = 0;
 
+        glm::vec4 old_pos;
+        old_pos = camera_position_c;
+
 		if(W_key)
 			camera_position_c += -w * speed;
 
@@ -450,23 +475,6 @@ int main(int argc, char* argv[])
 
 		if(A_key)
 			camera_position_c += -u * speed;
-
-        //Colisoes com as paredes = colisão com um plano
-        if(collisionPlane(PlanoEmQualEixo::X, arena_X, camera_position_c)) {
-            camera_position_c.x = arena_X - 0.42;
-        }
-
-        if(collisionPlane(PlanoEmQualEixo::X, -arena_X, camera_position_c)) {
-            camera_position_c.x = arena_X + 0.42;
-        }
-
-        if(collisionPlane(PlanoEmQualEixo::Z, arena_Z, camera_position_c)) {
-            camera_position_c.z = arena_Z - 0.42;
-        }
-
-        if(collisionPlane(PlanoEmQualEixo::Z, -arena_Z, camera_position_c)) {
-            camera_position_c.z = arena_Z + 0.42;
-        }
 
 
         // Abaixo definimos as varáveis que efetivamente definem a câmera virtual.
@@ -530,6 +538,7 @@ int main(int argc, char* argv[])
         #define STAFF  2
         #define FIREBALL 3
         #define FLOOR 4
+        #define PROJECTILE 5
 
         // Desenhamos o plano do chão
         //model = Matrix_Translate(0.0f,-1.1f,0.0f)*Matrix_Scale(5,1,3);
@@ -539,6 +548,7 @@ int main(int argc, char* argv[])
 
 
         //FONTE - Trabalho final
+
 
         // Chão
         model = Matrix_Translate(0.0f,-0.5f,0.0f)*Matrix_Scale(arena_X,arena_Y,arena_Z);
@@ -603,22 +613,23 @@ int main(int argc, char* argv[])
         glm::vec4 pos_dragao = bezier(caminho_percorrido,p1,p2,p3,p1);
 
 
+        // Dragão
+
         model = Matrix_Translate(pos_dragao.x, pos_dragao.y, pos_dragao.z)*Matrix_Scale(0.05,0.05,0.05);
+        glm::vec4 bbox_max_world_dragon = model * glm::vec4 (g_VirtualScene["dragon"].bbox_max.x, g_VirtualScene["dragon"].bbox_max.y, g_VirtualScene["dragon"].bbox_max.z, 1.0f);
+        glm::vec4 bbox_min_world_dragon = model * glm::vec4 (g_VirtualScene["dragon"].bbox_min.x, g_VirtualScene["dragon"].bbox_min.y, g_VirtualScene["dragon"].bbox_min.z, 1.0f);
         glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
         glUniform1i(object_id_uniform, DRAGON);
         DrawVirtualObject("dragon");
+
+
+        // Staff
 
         model = Matrix_Identity();
         model = model * Matrix_Translate(camera_position_c.x, camera_position_c.y, camera_position_c.z)
                        * Matrix_Rotate_Y(g_CameraTheta)
                         * Matrix_Rotate_X(g_CameraPhi);
         PushMatrix(model);
-            /*model = model* Matrix_Translate(-0.2,-0.2,0.1)
-                    * Matrix_Scale(.08f, .08f, .08f)
-                    * Matrix_Rotate_X(1.485)
-                    * Matrix_Rotate_Z(0.285f)
-                    * Matrix_Rotate_Y(3.14f*0.1)
-                    * Matrix_Translate(0,0,0);*/
             model = model* Matrix_Translate(-0.2f,-0.2f,0.2)
                     * Matrix_Scale(0.06f,0.06f,0.06f)
                     * Matrix_Rotate_X(-0.3f)
@@ -629,11 +640,21 @@ int main(int argc, char* argv[])
             DrawVirtualObject("staff");
         PopMatrix(model);
 
+
+
+        // Fireball
+
         if(!fireball_fired) {
             fireball_pos = pos_dragao;
             fireball_fired = true;
         }
-        //Bola de fogo precisa se mover em direção ao player
+
+        if(fireball_hp <= 0){
+            fireball_fired = false;
+            fireball_hp = FIREBALL_HP;
+        }
+
+        // Bola de fogo precisa se mover em direção ao player
         // O vetor que aponta para o player a partir da posição da fireball é:
         // Posição do player - posição da fireball
         glm::vec4 direcaoDoPlayer = camera_position_c - fireball_pos;
@@ -642,17 +663,86 @@ int main(int argc, char* argv[])
                                 fireball_pos.y + direcaoDoPlayer.y * speed_fireball,
                                 fireball_pos.z + direcaoDoPlayer.z * speed_fireball, 1.0f);
         model = Matrix_Translate(nova_fireball_pos.x, nova_fireball_pos.y, nova_fireball_pos.z)
-                *Matrix_Scale(0.05f, 0.05f, 0.05f);
+                *Matrix_Scale(0.02f, 0.02f, 0.02f);
         glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
         glUniform1i(object_id_uniform, FIREBALL);
         DrawVirtualObject("fireball");
         fireball_pos = nova_fireball_pos;
 
-        // SIMULANDO UMA COLISÃO
-        if(norm(fireball_pos - camera_position_c) < 0.1) {
-            fireball_fired = false;
+        glm::vec3 fireball_center = 0.5f * (g_VirtualScene["fireball"].bbox_max - g_VirtualScene["fireball"].bbox_min) + g_VirtualScene["fireball"].bbox_min;
+        glm::vec4 fireball_temp = model * glm::vec4(fireball_center.x, fireball_center.y, fireball_center.z, 1.0f);
+
+
+
+        // Projetil
+
+        float raio = g_VirtualScene["fireball"].bbox_max.x - g_VirtualScene["fireball"].bbox_min.x;
+
+        if(projectile_fired == true){
+            model = Matrix_Identity();
+            model = model * Matrix_Translate(projectile_pos.x , projectile_pos.y, projectile_pos.z)
+                        * Matrix_Rotate_Y(g_CameraTheta)
+                            * Matrix_Rotate_X(g_CameraPhi);
+            PushMatrix(model);
+                model = model* Matrix_Translate(0.0f,0.0f,0.8f)
+                        * Matrix_Scale(0.05f,0.05f,0.05f)
+                        * Matrix_Rotate_X(3.14f/2.0f)
+                        * Matrix_Translate(0,0,0);
+                glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+                glUniform1i(object_id_uniform, PROJECTILE);
+                DrawVirtualObject("projectile");
+            PopMatrix(model);
+
+            glm::vec4 nova_projectile_pos = glm::vec4(projectile_pos.x + camera_view_vector.x * speed_projectile,
+                                    projectile_pos.y + camera_view_vector.y * speed_projectile,
+                                    projectile_pos.z + camera_view_vector.z * speed_projectile, 1.0f);
+
+            projectile_pos = nova_projectile_pos;  
+
+            if(collisionProjectileFireball(projectile_pos, fireball_pos, raio)) {
+                projectile_fired = false;
+                fireball_hp = fireball_hp - player_damage;
+            }
         }
 
+
+        // COLISÕES
+
+        // PLAYER-PARADES  = colisão com um plano
+
+        if(collisionPlane(PlanoEmQualEixo::X, arena_X, camera_position_c)) {
+            //camera_position_c.x = arena_X - 0.42;
+            camera_position_c = old_pos;
+        }
+
+        if(collisionPlane(PlanoEmQualEixo::X, -arena_X, camera_position_c)) {
+            //camera_position_c.x = -arena_X + 0.42;
+            camera_position_c = old_pos;
+        }
+
+        if(collisionPlane(PlanoEmQualEixo::Z, arena_Z, camera_position_c)) {
+            //camera_position_c.z = arena_Z - 0.42;
+            camera_position_c = old_pos;
+        }
+
+        if(collisionPlane(PlanoEmQualEixo::Z, -arena_Z, camera_position_c)) {
+            //camera_position_c.z = -arena_Z + 0.42;
+            camera_position_c = old_pos;
+        }
+
+        // PLAYER-DRAGAO
+
+        if(CollisionPlayerDragon(camera_position_c, glm::vec3(0.2f, 0.2f, 0.2f), bbox_min_world_dragon, bbox_max_world_dragon)){
+            player_hp = player_hp - dragon_damage;
+            camera_position_c = initial_pos;
+        }
+
+        // PLAYER-FIREBALL
+/*
+        if(collisionPlayerFireball(camera_position_c, glm::vec3(0.2f, 0.2f, 0.2f), fireball_temp, raio)){
+            player_hp = player_hp - fireball_damage;
+            fireball_fired = false;
+        }*/
 
 
         // Imprimimos na tela os ângulos de Euler que controlam a rotação do
@@ -1287,6 +1377,11 @@ void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
         // com o botão esquerdo pressionado.
         glfwGetCursorPos(window, &g_LastCursorPosX, &g_LastCursorPosY);
         g_LeftMouseButtonPressed = true;
+
+        if (projectile_fired == false){
+            projectile_fired = true;
+            projectile_pos = camera_position_c;
+        }
     }
     if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE)
     {

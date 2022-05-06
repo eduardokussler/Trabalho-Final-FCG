@@ -25,6 +25,7 @@ uniform mat4 projection;
 #define STAFF  2
 #define FIREBALL 3
 #define FLOOR 4
+#define PROJECTILE 5
 uniform int object_id;
 
 // Parâmetros da axis-aligned bounding box (AABB) do modelo
@@ -129,7 +130,7 @@ void main()
         Kd = Kd / 2;
 
     }
-    else if ( object_id == STAFF )
+    else if ( object_id == STAFF || object_id == PROJECTILE )
     {
         float minx = bbox_min.x;
         float maxx = bbox_max.x;
