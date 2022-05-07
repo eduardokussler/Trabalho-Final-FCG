@@ -48,6 +48,7 @@ bool collisionProjectileFireball(glm::vec4 Projectilepos, glm::vec4 Fireballpos,
 
 
 // Colisao Player-Dragao
+// Fonte: https://developer.mozilla.org/en-US/docs/Games/Techniques/3D_collision_detection#point_vs._aabb
 bool CollisionPlayerDragon(glm::vec4 Playerpos, glm::vec3 player_size, glm::vec4 bbox_min_dragon, glm::vec4 bbox_max_dragon){
 
     glm::vec3 player_half_size = glm::vec3(player_size.x / 2, player_size.y / 2, player_size.z / 2);
@@ -62,6 +63,7 @@ bool CollisionPlayerDragon(glm::vec4 Playerpos, glm::vec3 player_size, glm::vec4
 
 
 // Colisao Projetil-Dragao
+// Fonte: https://developer.mozilla.org/en-US/docs/Games/Techniques/3D_collision_detection#point_vs._aabb
 bool collisionProjectileDragon(glm::vec4 bbox_min_dragon, glm::vec4 bbox_max_dragon, glm::vec4 Projectilepos){
     bool collision_x = (Projectilepos.x >= bbox_min_dragon.x && bbox_max_dragon.x >= Projectilepos.x);
     bool collision_y = (Projectilepos.y >= bbox_min_dragon.y && bbox_max_dragon.y >= Projectilepos.y);
